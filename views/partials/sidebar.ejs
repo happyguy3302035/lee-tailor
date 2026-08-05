@@ -1,7 +1,9 @@
+<!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <!-- Brand Logo -->
-  <a href="/" class="brand-link">
-    <span class="brand-text font-weight-light pl-3"><strong>App Manager</strong></span>
+  <a href="/company" class="brand-link">
+    <i class="fas fa-layer-group brand-image img-circle elevation-3 text-light pl-2 pr-2" style="opacity: .8; line-height: 1.6;"></i>
+    <span class="brand-text font-weight-light"><strong>App Manager</strong></span>
   </a>
 
   <!-- Sidebar -->
@@ -11,8 +13,8 @@
       <div class="image">
         <i class="fas fa-user-circle fa-2x text-light"></i>
       </div>
-      <div class="info">
-        <a href="#" class="d-block">
+      <div class="info pl-2">
+        <a href="#" class="d-block font-weight-bold">
           <%= (typeof user !== 'undefined' && user && user.username) ? user.username : 'POC-Admin' %>
         </a>
       </div>
@@ -22,6 +24,8 @@
     <nav class="mt-2">
       <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
         
+        <li class="nav-header">MODULES</li>
+
         <!-- Company Navigation Link -->
         <li class="nav-item">
           <a href="/company" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'company') ? 'active' : '' %>">
