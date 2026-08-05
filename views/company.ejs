@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>公司資料管理 - LTMS 系統</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.75rem;
+    }
+    .btn-sm {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .btn-danger {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+    .btn-danger:hover { background-color: #dc2626; }
+    .actions-cell {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .field-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Include Common Sidebar -->
+    <%- include('partials/sidebar') %>
+
+    <div class="main-wrapper">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>公司資料管理</h1>
+          <span class="subtitle">管理與設定報價單公司資訊</span>
+        </div>
+        <div class="user-profile">
+          使用者: <strong><%= user ? user.username : 'Admin' %></strong>
+        </div>
+      </header>
+
+      <main class="content-body">
+        <div class="card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>公司列表</h2>
+            <button class="btn btn-primary" onclick="openCreateModal()">+ 新增公司</button>
+          </div>
+
+          <div class="card-content">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>公司名稱 (Name)</th>
+                    <th>電郵 (Email)</th>
+                    <th>電話 (Phone)</th>
+                    <th>手機 (Mobile)</th>
+                    <th>傳真 (Fax)</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (companies.length === 0) { %>
+                    <tr>
+                      <td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">
+                        目前尚無公司資料，請點擊上方按鈕新增。
+                      </td>
+                    </tr>
+                  <% } else { %>
+                    <% companies.forEach(c => { %>
+                      <tr>
+                        <td><%= c.id %></td>
+                        <td><strong><%= c.Name %></strong></td>
+                        <td><%= c.Email || '-' %></td>
+                        <td><%= c.Phone || '-' %></td>
+                        <td><%= c.Mobile || '-' %></td>
+                        <td><%= c.Fax || '-' %></td>
+                        <td class="actions-cell">
+                          <button class="btn btn-secondary btn-sm" onclick="openEditModal(<%= c.id %>)">編輯</button>
+                          <button class="btn btn-danger btn-sm" onclick="deleteCompany(<%= c.id %>)">刪除</button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Create / Edit Modal -->
+  <div id="companyModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">新增公司</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal()">✕</button>
+      </div>
+
+      <form id="companyForm">
+        <input type="hidden" id="companyId">
+        
+        <div class="form-grid">
+          <!-- 1. Company Name -->
+          <div class="form-group full-width">
+            <label for="companyName">公司名稱 (Name) *</label>
+            <input type="text" id="companyName" class="form-control" required>
+          </div>
+
+          <!-- 2. Email Validation (@ pattern) -->
+          <div class="form-group">
+            <label for="companyEmail">電子郵件 (Email)</label>
+            <input 
+              type="email" 
+              id="companyEmail" 
+              class="form-control" 
+              placeholder="example@domain.com"
+            >
+            <span class="field-hint">須包含 @ 格式</span>
+          </div>
+
+          <!-- 3. Phone Validation (International standard) -->
+          <div class="form-group">
+            <label for="companyPhone">電話 (Phone)</label>
+            <input 
+              type="text" 
+              id="companyPhone" 
+              class="form-control" 
+              placeholder="+852 2123 4567" 
+            >
+            <span class="field-hint">國際格式，如 +852 2123 4567</span>
+          </div>
+
+          <!-- 4. Mobile Validation (International standard) -->
+          <div class="form-group">
+            <label for="companyMobile">流動電話 (Mobile)</label>
+            <input 
+              type="text" 
+              id="companyMobile" 
+              class="form-control" 
+              placeholder="+852 9123 4567" 
+            >
+            <span class="field-hint">國際格式，如 +852 9123 4567</span>
+          </div>
+
+          <!-- 5. Fax Validation (International standard) -->
+          <div class="form-group">
+            <label for="companyFax">傳真號碼 (Fax)</label>
+            <input 
+              type="text" 
+              id="companyFax" 
+              class="form-control" 
+              placeholder="+852 2123 4568" 
+            >
+            <span class="field-hint">國際格式，如 +852 2123 4568</span>
+          </div>
+
+          <!-- 6. Address -->
+          <div class="form-group full-width">
+            <label for="companyAddress">地址 (Address)</label>
+            <textarea id="companyAddress" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions" style="justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存資料</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('companyModal');
+    const form = document.getElementById('companyForm');
+
+    function openCreateModal() {
+      document.getElementById('modalTitle').textContent = '新增公司';
+      document.getElementById('companyId').value = '';
+      form.reset();
+      modal.classList.add('active');
+    }
+
+    async function openEditModal(id) {
+      try {
+        const res = await fetch(`/api/company/${id}`);
+        const result = await res.json();
+        
+        if (result.success) {
+          const c = result.data;
+          document.getElementById('modalTitle').textContent = '編輯公司資料';
+          document.getElementById('companyId').value = c.id;
+          document.getElementById('companyName').value = c.Name || '';
+          document.getElementById('companyEmail').value = c.Email || '';
+          document.getElementById('companyPhone').value = c.Phone || '';
+          document.getElementById('companyMobile').value = c.Mobile || '';
+          document.getElementById('companyFax').value = c.Fax || '';
+          document.getElementById('companyAddress').value = c.Address || '';
+          modal.classList.add('active');
+        }
+      } catch (err) {
+        alert('無法載入公司資料');
+      }
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    // Helper: Validate International E.164 Phone Format
+    // Accepts optional '+' at start, spaces, dashes, or parens, with total 7-15 digits
+    function isValidInternationalPhone(val) {
+      if (!val) return true; // Optional field check
+      const phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
+      if (!phoneRegex.test(val)) return false;
+      
+      // Verify actual digit count is between 7 and 15 (E.164 telecom standard)
+      const digitCount = val.replace(/\D/g, '').length;
+      return digitCount >= 7 && digitCount <= 15;
+    }
+
+    // Helper: Validate basic Email format
+    function isValidEmail(val) {
+      if (!val) return true; // Optional field check
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    }
+
+    // Form submission validation
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('companyEmail').value.trim();
+      const phone = document.getElementById('companyPhone').value.trim();
+      const mobile = document.getElementById('companyMobile').value.trim();
+      const fax = document.getElementById('companyFax').value.trim();
+
+      // 1. Email Format Check
+      if (email && !isValidEmail(email)) {
+        alert('電郵格式不正確，必須包含 @ 符號（例如：info@example.com）。');
+        document.getElementById('companyEmail').focus();
+        return;
+      }
+
+      // 2. Phone International Format Check
+      if (phone && !isValidInternationalPhone(phone)) {
+        alert('電話號碼不符合國際格式，請包含 7 至 15 位數字（可包含 + 國家號碼及空格，如 +852 2123 4567）。');
+        document.getElementById('companyPhone').focus();
+        return;
+      }
+
+      // 3. Mobile International Format Check
+      if (mobile && !isValidInternationalPhone(mobile)) {
+        alert('流動電話不符合國際格式，請包含 7 至 15 位數字（可包含 + 國家號碼及空格，如 +852 9123 4567）。');
+        document.getElementById('companyMobile').focus();
+        return;
+      }
+
+      // 4. Fax International Format Check
+      if (fax && !isValidInternationalPhone(fax)) {
+        alert('傳真號碼不符合國際格式，請包含 7 至 15 位數字（可包含 + 國家號碼及空格，如 +852 2123 4568）。');
+        document.getElementById('companyFax').focus();
+        return;
+      }
+
+      // Proceed with API Request after validation passes
+      const id = document.getElementById('companyId').value;
+      const isEdit = Boolean(id);
+      const url = isEdit ? `/api/company/${id}` : '/api/company';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const payload = {
+        name: document.getElementById('companyName').value.trim(),
+        email,
+        phone,
+        mobile,
+        fax,
+        address: document.getElementById('companyAddress').value.trim()
+      };
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          location.reload();
+        } else {
+          alert('操作失敗: ' + result.message);
+        }
+      } catch (err) {
+        alert('伺服器連線失敗');
+      }
+    });
+
+    // Delete handler
+    async function deleteCompany(id) {
+      if (!confirm('確定要刪除這間公司的資料嗎？')) return;
+
+      try {
+        const res = await fetch(`/api/company/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        
+        if (result.success) {
+          location.reload();
+        } else {
+          alert('刪除失敗: ' + result.message);
+        }
+      } catch (err) {
+        alert('伺服器連線失敗');
+      }
+    }
+  </script>
+</body>
+</html>

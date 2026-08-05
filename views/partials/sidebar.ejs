@@ -1,0 +1,46 @@
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <!-- Brand Logo -->
+  <a href="/" class="brand-link">
+    <span class="brand-text font-weight-light pl-3"><strong>App Manager</strong></span>
+  </a>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Sidebar User Panel -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
+      <div class="image">
+        <i class="fas fa-user-circle fa-2x text-light"></i>
+      </div>
+      <div class="info">
+        <a href="#" class="d-block">
+          <%= (typeof user !== 'undefined' && user && user.username) ? user.username : 'POC-Admin' %>
+        </a>
+      </div>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        
+        <!-- Company Navigation Link -->
+        <li class="nav-item">
+          <a href="/company" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'company') ? 'active' : '' %>">
+            <i class="nav-icon fas fa-building"></i>
+            <p>Company</p>
+          </a>
+        </li>
+
+        <!-- ShortForm Navigation Link -->
+        <li class="nav-item">
+          <a href="/shortform" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'shortform') ? 'active' : '' %>">
+            <i class="nav-icon fas fa-file-alt"></i>
+            <p>ShortForm</p>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+    <!-- /.sidebar-menu -->
+  </div>
+  <!-- /.sidebar -->
+</aside>
