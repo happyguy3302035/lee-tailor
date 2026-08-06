@@ -67,6 +67,27 @@ db.serialize(() => {
       console.log('OrderCode table initialized successfully.');
     }
   });
+
+  // 2. Component Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Component (
+      ComponentId INTEGER PRIMARY KEY AUTOINCREMENT,
+      NameCHS TEXT UNIQUE NOT NULL,
+      NameENG TEXT UNIQUE NOT NULL,
+      NameShort TEXT UNIQUE NOT NULL,
+      Remark TEXT,
+      Priority INTEGER
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating Component table:', err.message);
+    } else {
+      console.log('Component table initialized successfully.');
+    }
+  });
+
+
+  
 });
 
 module.exports = db;
