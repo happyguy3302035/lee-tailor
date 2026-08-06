@@ -24,8 +24,9 @@ app.set('views', path.join(__dirname, 'views'));
 // 3. Import & Mount Modular Routes
 // ==========================================
 const companyApiRoutes = require('./routes/company');
+const orderCodeRouter = require('./routes/orderCode');
 app.use('/company', companyApiRoutes);
-
+app.use('/order-code', orderCodeRouter);
 // ==========================================
 // 4. Page Rendering Routes
 // ==========================================
