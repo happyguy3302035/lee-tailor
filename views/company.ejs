@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>App Manager | Company Management</title>
+  <title>App Manager | Company Information</title>
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -30,7 +30,7 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0"><i class="fas fa-building mr-2"></i>Company Management</h1>
+            <h1 class="m-0"><i class="fas fa-building mr-2"></i>Company Information</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
@@ -45,79 +45,143 @@
     <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
-        
-        <!-- Metrics Row -->
-        <div class="row">
-          <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box mb-3">
-              <span class="info-box-icon bg-info elevation-1"><i class="fas fa-building"></i></span>
-              <div class="info-box-content">
-                <span class="info-box-text">Total Companies</span>
-                <span class="info-box-number" id="totalCompaniesCount">
-                  <%= (typeof companies !== 'undefined' && companies) ? companies.length : 0 %>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Data Card -->
-        <div class="card card-primary card-outline">
+        <!-- Flash Alert Messages -->
+        <% if (message === 'created') { %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="icon fas fa-check"></i> Company Information created successfully!
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        <% } else if (message === 'updated') { %>
+          <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="icon fas fa-info-circle"></i> Company Information updated successfully!
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        <% } %>
+
+        <!-- Single Record Form Card -->
+        <div class="card card-info card-outline">
           <div class="card-header">
-            <h3 class="card-title">Company List</h3>
-            <div class="card-tools d-flex align-items-center">
-              <button type="button" class="btn btn-primary btn-sm mr-2" data-toggle="modal" data-target="#addCompanyModal">
-                <i class="fas fa-plus mr-1"></i> Add Company
+            <h3 class="card-title">
+              <i class="fas fa-edit mr-1"></i>
+              <%= companyInfo ? 'Edit Company Information' : 'Setup Company Information' %>
+            </h3>
+          </div>
+
+          <form id="companyForm" action="/company/save" method="POST" class="needs-validation" novalidate>
+            <div class="card-body">
+              
+              <!-- Company Name (Max 100 Chars) -->
+              <div class="form-group">
+                <label for="Name">Company Name <span class="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="Name" 
+                  name="Name" 
+                  placeholder="Enter company name"
+                  value="<%= companyInfo ? companyInfo.Name : '' %>" 
+                  maxlength="100"
+                  required
+                >
+                <div class="d-flex justify-content-between">
+                  <small class="invalid-feedback">Company Name is required (Max 100 characters).</small>
+                  <small class="form-text text-muted ml-auto"><span id="nameCharCount">0</span>/100 chars</small>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <label for="Email">Email Address</label>
+                  <input 
+                    type="email" 
+                    class="form-control" 
+                    id="Email" 
+                    name="Email" 
+                    placeholder="Enter email address"
+                    value="<%= companyInfo ? companyInfo.Email : '' %>"
+                  >
+                  <div class="invalid-feedback">Please enter a valid email address.</div>
+                </div>
+
+                <!-- Phone Field -->
+                <div class="col-md-6 form-group">
+                  <label for="Phone">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    id="Phone" 
+                    name="Phone" 
+                    placeholder="e.g. +44 113 123 4567"
+                    value="<%= companyInfo ? companyInfo.Phone : '' %>"
+                    pattern="^[+]?[0-9\s\-\(\)]{7,20}$"
+                  >
+                  <div class="invalid-feedback">Please enter a valid phone number (7–20 digits, spaces, dashes, or parentheses).</div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Mobile Field -->
+                <div class="col-md-6 form-group">
+                  <label for="Mobile">Mobile Number</label>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    id="Mobile" 
+                    name="Mobile" 
+                    placeholder="e.g. +44 7700 900123"
+                    value="<%= companyInfo ? companyInfo.Mobile : '' %>"
+                    pattern="^[+]?[0-9\s\-\(\)]{7,20}$"
+                  >
+                  <div class="invalid-feedback">Please enter a valid mobile number (7–20 digits, spaces, dashes, or parentheses).</div>
+                </div>
+
+                <!-- Fax Field -->
+                <div class="col-md-6 form-group">
+                  <label for="Fax">Fax Number</label>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    id="Fax" 
+                    name="Fax" 
+                    placeholder="e.g. +44 113 123 4568"
+                    value="<%= companyInfo ? companyInfo.Fax : '' %>"
+                    pattern="^[+]?[0-9\s\-\(\)]{7,20}$"
+                  >
+                  <div class="invalid-feedback">Please enter a valid fax number (7–20 digits, spaces, dashes, or parentheses).</div>
+                </div>
+              </div>
+
+              <!-- Address (Max 255 Chars) -->
+              <div class="form-group">
+                <label for="Address">Company Address</label>
+                <textarea 
+                  class="form-control" 
+                  id="Address" 
+                  name="Address" 
+                  rows="3" 
+                  placeholder="Enter address"
+                  maxlength="255"
+                ><%= companyInfo ? companyInfo.Address : '' %></textarea>
+                <div class="d-flex justify-content-between">
+                  <small class="invalid-feedback">Address cannot exceed 255 characters.</small>
+                  <small class="form-text text-muted ml-auto"><span id="addressCharCount">0</span>/255 chars</small>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="card-footer">
+              <button type="submit" class="btn btn-info">
+                <i class="fas fa-save mr-1"></i>
+                <%= companyInfo ? 'Update Company Info' : 'Create Company Info' %>
               </button>
             </div>
-          </div>
-
-          <div class="card-body table-responsive p-0">
-            <table class="table table-hover table-striped text-nowrap align-middle">
-              <thead>
-                <tr>
-                  <th style="width: 60px;">ID</th>
-                  <th>公司名稱 (Name)</th>
-                  <th>電郵 (Email)</th>
-                  <th>電話 (Phone)</th>
-                  <th>手機 (Mobile)</th>
-                  <th>傳真 (Fax)</th>
-                  <th>地址</th>
-                  <th style="width: 120px;" class="text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="companyTableBody">
-                <% if (typeof companies !== 'undefined' && companies && companies.length > 0) { %>
-                  <% companies.forEach(function(comp) { %>
-                    <tr>
-                      <td><%= comp.id %></td>
-                      <td><strong><%= comp.Name || comp.name || 'N/A' %></strong></td>
-                      <td><%= comp.Email || comp.email || 'N/A' %></td>
-                      <td><%= comp.Phone || comp.phone || 'N/A' %></td>
-                      <td><%= comp.Mobile || comp.mobile || 'N/A' %></td>
-                      <td><%= comp.Fax || comp.fax || 'N/A' %></td>
-                      <td><%= comp.Address || comp.address || 'N/A' %></td>
-                      <td class="text-center">
-                        <button class="btn btn-info btn-xs mr-1" title="Edit" onclick="editCompany('<%= comp.id %>')">
-                          <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-xs" title="Delete" onclick="deleteCompany('<%= comp.id %>')">
-                          <i class="fas fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="9" class="text-center text-muted py-4">
-                      <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
-                      No companies found in database.
-                    </td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
+          </form>
         </div>
 
       </div>
@@ -129,119 +193,6 @@
 
 </div>
 
-<!-- Modal: Add Company -->
-<div class="modal fade" id="addCompanyModal" tabindex="-1" role="dialog" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="addCompanyModalLabel"><i class="fas fa-plus-circle mr-2"></i>Add New Company</h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <form id="addCompanyForm">
-        <div class="modal-body">
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <label for="companyName">公司名稱 (Name) <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="companyName" name="name" placeholder="Enter company name" required>
-            </div>
-            <div class="form-group col-md-6">
-              <label for="companyEmail">電郵 (Email)</label>
-              <input type="email" class="form-control" id="companyEmail" name="email" placeholder="contact@company.com">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group col-md-4">
-              <label for="companyPhone">電話 (Phone)</label>
-              <input type="tel" class="form-control" id="companyPhone" name="phone" 
-                     placeholder="+852 2123 4567"
-                     pattern="^[+]?[0-9\s\-\(\)]{7,20}$"
-                     title="Please enter a valid international phone format">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="companyMobile">手機 (Mobile)</label>
-              <input type="tel" class="form-control" id="companyMobile" name="mobile" 
-                     placeholder="+852 9123 4567"
-                     pattern="^[+]?[0-9\s\-\(\)]{7,20}$"
-                     title="Please enter a valid international mobile format">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="companyFax">傳真 (Fax)</label>
-              <input type="tel" class="form-control" id="companyFax" name="fax" 
-                     placeholder="+852 2123 4568"
-                     pattern="^[+]?[0-9\s\-\(\)]{7,20}$"
-                     title="Please enter a valid international fax format">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="companyAddress">地址 (Address)</label>
-            <input type="text" class="form-control" id="companyAddress" name="address" placeholder="Company full address">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save Company</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Edit Company -->
-<div class="modal fade" id="editCompanyModal" tabindex="-1" role="dialog" aria-labelledby="editCompanyModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title" id="editCompanyModalLabel"><i class="fas fa-edit mr-2"></i>Edit Company</h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <form id="editCompanyForm">
-        <input type="hidden" id="editCompanyId">
-        <div class="modal-body">
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <label for="editCompanyName">公司名稱 (Name) <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="editCompanyName" name="name" required>
-            </div>
-            <div class="form-group col-md-6">
-              <label for="editCompanyEmail">電郵 (Email)</label>
-              <input type="email" class="form-control" id="editCompanyEmail" name="email">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group col-md-4">
-              <label for="editCompanyPhone">電話 (Phone)</label>
-              <input type="tel" class="form-control" id="editCompanyPhone" name="phone"
-                     pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="editCompanyMobile">手機 (Mobile)</label>
-              <input type="tel" class="form-control" id="editCompanyMobile" name="mobile"
-                     pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="editCompanyFax">傳真 (Fax)</label>
-              <input type="tel" class="form-control" id="editCompanyFax" name="fax"
-                     pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="editCompanyAddress">地址 (Address)</label>
-            <input type="text" class="form-control" id="editCompanyAddress" name="address">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-info"><i class="fas fa-sync-alt mr-1"></i> Update Company</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 <!-- Required Core Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -250,129 +201,35 @@
 
 <script>
   $(document).ready(function() {
-    // ------------------------------------------
-    // 1. ADD COMPANY FORM SUBMISSION (POST)
-    // ------------------------------------------
-    $('#addCompanyForm').on('submit', function(e) {
-      e.preventDefault();
+    // Real-time character counter update function
+    function updateCounter(inputSelector, counterSelector) {
+      const currentLength = $(inputSelector).val().length;
+      $(counterSelector).text(currentLength);
+    }
 
-      const formData = {
-        name: $('#companyName').val(),
-        email: $('#companyEmail').val(),
-        phone: $('#companyPhone').val(),
-        mobile: $('#companyMobile').val(),
-        fax: $('#companyFax').val(),
-        address: $('#companyAddress').val()
-      };
+    // Initialize character counts on page load
+    updateCounter('#Name', '#nameCharCount');
+    updateCounter('#Address', '#addressCharCount');
 
-      $.ajax({
-        url: '/api/company',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(formData),
-        success: function(response) {
-          if (response.success) {
-            $('#addCompanyModal').modal('hide');
-            window.location.reload();
-          } else {
-            alert('Failed to save company: ' + response.message);
-          }
-        },
-        error: function(xhr) {
-          const err = xhr.responseJSON ? xhr.responseJSON.message : 'Server error';
-          alert('Error saving company: ' + err);
-        }
-      });
+    // Update counters dynamically on input
+    $('#Name').on('input', function() {
+      updateCounter('#Name', '#nameCharCount');
     });
 
-    // ------------------------------------------
-    // 2. EDIT COMPANY FORM SUBMISSION (PUT)
-    // ------------------------------------------
-    $('#editCompanyForm').on('submit', function(e) {
-      e.preventDefault();
+    $('#Address').on('input', function() {
+      updateCounter('#Address', '#addressCharCount');
+    });
 
-      const id = $('#editCompanyId').val();
-      const formData = {
-        name: $('#editCompanyName').val(),
-        email: $('#editCompanyEmail').val(),
-        phone: $('#editCompanyPhone').val(),
-        mobile: $('#editCompanyMobile').val(),
-        fax: $('#editCompanyFax').val(),
-        address: $('#editCompanyAddress').val()
-      };
-
-      $.ajax({
-        url: '/api/company/' + id,
-        type: 'PUT',
-        contentType: 'application/json',
-        data: JSON.stringify(formData),
-        success: function(response) {
-          if (response.success) {
-            $('#editCompanyModal').modal('hide');
-            window.location.reload();
-          } else {
-            alert('Failed to update company: ' + response.message);
-          }
-        },
-        error: function(xhr) {
-          const err = xhr.responseJSON ? xhr.responseJSON.message : 'Server error';
-          alert('Error updating company: ' + err);
-        }
-      });
+    // Bootstrap Form Validation on Submit
+    $('#companyForm').on('submit', function(e) {
+      const form = this;
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      $(form).addClass('was-validated');
     });
   });
-
-  // ------------------------------------------
-  // 3. FETCH COMPANY DATA & OPEN EDIT MODAL
-  // ------------------------------------------
-  function editCompany(id) {
-    $.ajax({
-      url: '/api/company/' + id,
-      type: 'GET',
-      success: function(response) {
-        if (response.success && response.data) {
-          const comp = response.data;
-          
-          $('#editCompanyId').val(comp.id);
-          $('#editCompanyName').val(comp.Name || comp.name || '');
-          $('#editCompanyEmail').val(comp.Email || comp.email || '');
-          $('#editCompanyPhone').val(comp.Phone || comp.phone || '');
-          $('#editCompanyMobile').val(comp.Mobile || comp.mobile || '');
-          $('#editCompanyFax').val(comp.Fax || comp.fax || '');
-          $('#editCompanyAddress').val(comp.Address || comp.address || '');
-
-          $('#editCompanyModal').modal('show');
-        } else {
-          alert('Company data could not be retrieved.');
-        }
-      },
-      error: function() {
-        alert('Error fetching company details');
-      }
-    });
-  }
-
-  // ------------------------------------------
-  // 4. DELETE COMPANY (DELETE)
-  // ------------------------------------------
-  function deleteCompany(id) {
-    if (confirm('Are you sure you want to delete this company?')) {
-      $.ajax({
-        url: '/api/company/' + id,
-        type: 'DELETE',
-        success: function(response) {
-          if (response.success) {
-            window.location.reload();
-          } else {
-            alert('Failed to delete company: ' + response.message);
-          }
-        },
-        error: function() {
-          alert('Error deleting company');
-        }
-      });
-    }
-  }
 </script>
 
 </body>
