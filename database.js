@@ -25,8 +25,9 @@ db.serialize(() => {
       Address TEXT
     );
   `, (err) => {
-    if (err) console.error('Error creating CompanyInfo table:', err.message);
-    else console.log('✓ CompanyInfo table ready.');
+    if (err) {
+      console.error('Error creating CompanyInfo table:', err.message);
+      return;
     }
 
     // Auto-seed initial record if empty
