@@ -4,7 +4,7 @@ const db = require('../database'); // Adjust relative path to your SQLite databa
 
 // 1. GET all companies
 router.get('/', (req, res) => {
-  const sql = 'SELECT * FROM CompanyInfo ORDER BY id DESC';
+  const sql = 'SELECT * FROM CompanyInfo ORDER BY CompanyInfoId DESC';
   db.all(sql, [], (err, rows) => {
     if (err) {
       return res.status(500).json({ success: false, error: err.message });
@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
 
 // 2. GET single company by ID (useful for populating edit form)
 router.get('/:id', (req, res) => {
-  const sql = 'SELECT * FROM CompanyInfo WHERE id = ?';
+  const sql = 'SELECT * FROM CompanyInfo WHERE CompanyInfoId = ?';
   db.get(sql, [req.params.id], (err, row) => {
     if (err) {
       return res.status(500).json({ success: false, error: err.message });
@@ -79,7 +79,7 @@ router.put('/:id', (req, res) => {
         Mobile = ?,
         Fax = ?,
         Address = ?
-    WHERE id = ?
+    WHERE CompanyInfoId = ?
   `;
   const params = [
     name,
@@ -110,7 +110,7 @@ router.put('/:id', (req, res) => {
 
 // 5. DELETE - Remove company
 router.delete('/:id', (req, res) => {
-  const sql = 'DELETE FROM CompanyInfo WHERE id = ?';
+  const sql = 'DELETE FROM CompanyInfo WHERE CompanyInfoId = ?';
   db.run(sql, [req.params.id], function (err) {
     if (err) {
       return res.status(500).json({ success: false, message: err.message });
