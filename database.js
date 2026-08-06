@@ -16,32 +16,17 @@ db.serialize(() => {
   // CompanyInfo Table
   db.run(`
     CREATE TABLE IF NOT EXISTS CompanyInfo (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      Name TEXT NOT NULL,
+      CompanyInfoId INTEGER PRIMARY KEY AUTOINCREMENT,
+      Name TEXT UNIQUE NOT NULL,
       Email TEXT,
       Phone TEXT,
       Mobile TEXT,
       Fax TEXT,
-      Address TEXT,
-      createddatetime DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updateddatetime DATETIME DEFAULT CURRENT_TIMESTAMP
+      Address TEXT
     );
   `, (err) => {
     if (err) console.error('Error creating CompanyInfo table:', err.message);
     else console.log('✓ CompanyInfo table ready.');
-  });
-
-  // ShortForm Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS ShortForm (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      ShortForm TEXT NOT NULL,
-      createddatetime DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updateddatetime DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `, (err) => {
-    if (err) console.error('Error creating ShortForm table:', err.message);
-    else console.log('✓ ShortForm table ready.');
   });
 });
 
