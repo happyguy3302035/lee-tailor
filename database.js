@@ -27,7 +27,20 @@ db.serialize(() => {
   `, (err) => {
     if (err) console.error('Error creating CompanyInfo table:', err.message);
     else console.log('✓ CompanyInfo table ready.');
-  });
+    }
+
+    // Auto-seed initial record if empty
+    db.get('SELECT COUNT(*) AS count FROM CompanyInfo', [], (err, row) => {
+      if (!err && row.count === 0) {
+        const seedSql = `
+          INSERT INTO CompanyInfo (Name, Email, Phone, Address) 
+          VALUES (?, ?, ?, ?)
+        `;
+        db.run(seedSql, ['My Company Ltd', 'info@example.com', '1131234567', 'HK'], (err) => {
+          if (!err) console.log('Default CompanyInfo record created.');
+        });
+      }
+    });
 });
 
 // Export database instance
