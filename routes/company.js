@@ -36,8 +36,8 @@ router.post('/', (req, res) => {
   }
 
   const sql = `
-    INSERT INTO CompanyInfo (Name, Email, Phone, Mobile, Fax, Address, createddatetime, updateddatetime)
-    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    INSERT INTO CompanyInfo (Name, Email, Phone, Mobile, Fax, Address)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
   const params = [
     name,
@@ -78,8 +78,7 @@ router.put('/:id', (req, res) => {
         Phone = ?,
         Mobile = ?,
         Fax = ?,
-        Address = ?,
-        updateddatetime = CURRENT_TIMESTAMP
+        Address = ?
     WHERE id = ?
   `;
   const params = [
