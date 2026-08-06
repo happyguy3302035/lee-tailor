@@ -83,7 +83,6 @@
                   <th>手機 (Mobile)</th>
                   <th>傳真 (Fax)</th>
                   <th>地址</th>
-                  <th>更新時間 (Updated)</th>
                   <th style="width: 120px;" class="text-center">Actions</th>
                 </tr>
               </thead>
@@ -98,12 +97,6 @@
                       <td><%= comp.Mobile || comp.mobile || 'N/A' %></td>
                       <td><%= comp.Fax || comp.fax || 'N/A' %></td>
                       <td><%= comp.Address || comp.address || 'N/A' %></td>
-                      <td>
-                        <small class="text-muted">
-                          <i class="far fa-clock mr-1"></i>
-                          <%= comp.updateddatetime || comp.createddatetime || 'N/A' %>
-                        </small>
-                      </td>
                       <td class="text-center">
                         <button class="btn btn-info btn-xs mr-1" title="Edit" onclick="editCompany('<%= comp.id %>')">
                           <i class="fas fa-edit"></i>
