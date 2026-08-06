@@ -14,7 +14,8 @@ router.get('/', (req, res) => {
     // Render views/company.ejs
     res.render('company', { 
       companyInfo: row || null, 
-      message: req.query.msg || null 
+      message: req.query.msg || null,
+      activePage: 'company' 
     });
   });
 });
