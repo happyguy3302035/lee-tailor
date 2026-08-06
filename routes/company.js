@@ -1,121 +1,66 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database'); // Adjust relative path to your SQLite database module
+const db = require('../database');
 
-// 1. GET all companies
+// 1. READ: Get the single CompanyInfo record and render views/company.ejs
 router.get('/', (req, res) => {
-  const sql = 'SELECT * FROM CompanyInfo ORDER BY CompanyInfoId DESC';
-  db.all(sql, [], (err, rows) => {
+  const sql = 'SELECT * FROM CompanyInfo LIMIT 1';
+  
+  db.get(sql, [], (err, row) => {
     if (err) {
-      return res.status(500).json({ success: false, error: err.message });
+      console.error('Error fetching CompanyInfo:', err.message);
+      return res.status(500).send('Database error');
     }
-    res.json({ success: true, data: rows });
-  });
-});
-
-// 2. GET single company by ID (useful for populating edit form)
-router.get('/:id', (req, res) => {
-  const sql = 'SELECT * FROM CompanyInfo WHERE CompanyInfoId = ?';
-  db.get(sql, [req.params.id], (err, row) => {
-    if (err) {
-      return res.status(500).json({ success: false, error: err.message });
-    }
-    if (!row) {
-      return res.status(404).json({ success: false, message: 'Company not found' });
-    }
-    res.json({ success: true, data: row });
-  });
-});
-
-// 3. POST - Insert new company (Fills createddatetime and updateddatetime)
-router.post('/', (req, res) => {
-  const { name, email, phone, mobile, fax, address } = req.body;
-
-  if (!name) {
-    return res.status(400).json({ success: false, message: 'Company Name is required' });
-  }
-
-  const sql = `
-    INSERT INTO CompanyInfo (Name, Email, Phone, Mobile, Fax, Address)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-  const params = [
-    name,
-    email || '',
-    phone || '',
-    mobile || '',
-    fax || '',
-    address || ''
-  ];
-
-  db.run(sql, params, function (err) {
-    if (err) {
-      console.error('Error inserting company:', err.message);
-      return res.status(500).json({ success: false, message: err.message });
-    }
-
-    res.json({
-      success: true,
-      message: 'Company created successfully',
-      data: { id: this.lastID }
+    // Render views/company.ejs
+    res.render('company', { 
+      companyInfo: row || null, 
+      message: req.query.msg || null 
     });
   });
 });
 
-// 4. PUT - Update existing company (Refreshes updateddatetime only)
-router.put('/:id', (req, res) => {
-  const { name, email, phone, mobile, fax, address } = req.body;
-  const companyId = req.params.id;
+// 2. CREATE / UPDATE (Upsert): Save the single CompanyInfo record
+router.post('/save', (req, res) => {
+  const { Name, Email, Phone, Mobile, Fax, Address } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ success: false, message: 'Company Name is required' });
+  if (!Name) {
+    return res.status(400).send('Company Name is required.');
   }
 
-  const sql = `
-    UPDATE CompanyInfo
-    SET Name = ?,
-        Email = ?,
-        Phone = ?,
-        Mobile = ?,
-        Fax = ?,
-        Address = ?
-    WHERE CompanyInfoId = ?
-  `;
-  const params = [
-    name,
-    email || '',
-    phone || '',
-    mobile || '',
-    fax || '',
-    address || '',
-    companyId
-  ];
-
-  db.run(sql, params, function (err) {
+  db.get('SELECT CompanyInfoId FROM CompanyInfo LIMIT 1', [], (err, row) => {
     if (err) {
-      console.error('Error updating company:', err.message);
-      return res.status(500).json({ success: false, message: err.message });
+      console.error('Error querying CompanyInfo:', err.message);
+      return res.status(500).send('Database error');
     }
 
-    if (this.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Company not found' });
+    if (row) {
+      // UPDATE existing record
+      const updateSql = `
+        UPDATE CompanyInfo 
+        SET Name = ?, Email = ?, Phone = ?, Mobile = ?, Fax = ?, Address = ?
+        WHERE CompanyInfoId = ?
+      `;
+      db.run(updateSql, [Name, Email, Phone, Mobile, Fax, Address, row.CompanyInfoId], function(err) {
+        if (err) {
+          console.error('Error updating CompanyInfo:', err.message);
+          return res.status(500).send('Failed to update Company Info');
+        }
+        res.redirect('/company?msg=updated');
+      });
+    } else {
+      // CREATE new single record
+      const insertSql = `
+        INSERT INTO CompanyInfo (Name, Email, Phone, Mobile, Fax, Address)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      db.run(insertSql, [Name, Email, Phone, Mobile, Fax, Address], function(err) {
+        if (err) {
+          console.error('Error creating CompanyInfo:', err.message);
+          return res.status(500).send('Failed to create Company Info');
+        }
+        res.redirect('/company?msg=created');
+      });
     }
-
-    res.json({
-      success: true,
-      message: 'Company updated successfully'
-    });
-  });
-});
-
-// 5. DELETE - Remove company
-router.delete('/:id', (req, res) => {
-  const sql = 'DELETE FROM CompanyInfo WHERE CompanyInfoId = ?';
-  db.run(sql, [req.params.id], function (err) {
-    if (err) {
-      return res.status(500).json({ success: false, message: err.message });
-    }
-    res.json({ success: true, message: 'Company deleted' });
   });
 });
 
