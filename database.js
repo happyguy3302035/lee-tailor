@@ -52,6 +52,21 @@ db.serialize(() => {
       });
     }
   });
+  
+  // 2. OrderCode Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS OrderCode (
+      OrderCodeId INTEGER PRIMARY KEY AUTOINCREMENT,
+      Name TEXT UNIQUE NOT NULL,
+      Priority INTEGER
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating OrderCode table:', err.message);
+    } else {
+      console.log('OrderCode table initialized successfully.');
+    }
+  });
 });
 
 module.exports = db;
