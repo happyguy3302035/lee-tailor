@@ -1,19 +1,23 @@
-const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-// 1. Establish SQLite Connection
-const dbPath = path.join(__dirname, 'database.db');
+// Resolve path to SQLite database file
+const dbPath = path.resolve(__dirname, 'database.sqlite');
+
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('❌ Error connecting to SQLite database:', err.message);
+    console.error('Error opening SQLite database:', err.message);
   } else {
-    console.log('⚡ Connected to SQLite database.');
+    console.log('Connected to SQLite database.');
   }
 });
 
-// 2. Initialize Database Tables
+// Initialize database schema
 db.serialize(() => {
-  // CompanyInfo Table
+  // 1. Enable foreign key constraints
+  db.run('PRAGMA foreign_keys = ON;');
+
+  // 2. Create CompanyInfo table with UNIQUE NOT NULL Name constraint
   db.run(`
     CREATE TABLE IF NOT EXISTS CompanyInfo (
       CompanyInfoId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,26 +27,31 @@ db.serialize(() => {
       Mobile TEXT,
       Fax TEXT,
       Address TEXT
-    );
+    )
   `, (err) => {
     if (err) {
       console.error('Error creating CompanyInfo table:', err.message);
-      return;
-    }
+    } else {
+      console.log('CompanyInfo table initialized successfully.');
 
-    // Auto-seed initial record if empty
-    db.get('SELECT COUNT(*) AS count FROM CompanyInfo', [], (err, row) => {
-      if (!err && row.count === 0) {
-        const seedSql = `
-          INSERT INTO CompanyInfo (Name, Email, Phone, Address) 
-          VALUES (?, ?, ?, ?)
-        `;
-        db.run(seedSql, ['My Company Ltd', 'info@example.com', '1131234567', 'HK'], (err) => {
-          if (!err) console.log('Default CompanyInfo record created.');
-        });
-      }
-    });
+      // 3. Auto-seed default record if table is empty
+      db.get('SELECT COUNT(*) AS count FROM CompanyInfo', [], (err, row) => {
+        if (!err && row && row.count === 0) {
+          const seedSql = `
+            INSERT INTO CompanyInfo (Name, Email, Phone, Address) 
+            VALUES (?, ?, ?, ?)
+          `;
+          db.run(seedSql, ['My Company Ltd', 'info@example.com', '1131234567', 'HK'], (err) => {
+            if (!err) {
+              console.log('Default CompanyInfo record created.');
+            } else {
+              console.error('Error seeding default CompanyInfo:', err.message);
+            }
+          });
+        }
+      });
+    }
+  });
 });
 
-// Export database instance
 module.exports = db;
