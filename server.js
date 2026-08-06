@@ -25,8 +25,11 @@ app.set('views', path.join(__dirname, 'views'));
 // ==========================================
 const companyApiRoutes = require('./routes/company');
 const orderCodeRouter = require('./routes/orderCode');
+const componentRouter = require('./routes/component');
+
 app.use('/company', companyApiRoutes);
 app.use('/order-code', orderCodeRouter);
+app.use('/component', componentRouter);
 // ==========================================
 // 4. Page Rendering Routes
 // ==========================================
