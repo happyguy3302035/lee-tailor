@@ -14,7 +14,8 @@ router.get('/', (req, res) => {
     res.render('orderCode', {
       orderCodes: rows || [],
       message: req.query.msg || null,
-      error: req.query.err || null
+      error: req.query.err || null,
+      activePage: 'orderCode' // <--- Controls active sidebar link
     });
   });
 });
