@@ -24,7 +24,7 @@ app.set('views', path.join(__dirname, 'views'));
 // 3. Import & Mount Modular Routes
 // ==========================================
 const companyApiRoutes = require('./routes/company');
-app.use('/api/company', companyApiRoutes);
+app.use('/company', companyApiRoutes);
 
 // ==========================================
 // 4. Page Rendering Routes
