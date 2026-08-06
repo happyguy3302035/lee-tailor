@@ -1,48 +1,63 @@
 const express = require('express');
 const path = require('path');
-
-// Initialize Database connection & schemas
-require('./database');
+const db = require('./database');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // ==========================================
-// 1. Core Body Parsers & Static Files
+// 1. Core Middlewares
 // ==========================================
+// Parses incoming JSON payloads (Crucial for AJAX requests in company.ejs)
 app.use(express.json());
+// Parses URL-encoded bodies from standard form submissions
 app.use(express.urlencoded({ extended: true }));
+// Serves static files (CSS, JS, Images) from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Set EJS View Engine
+// ==========================================
+// 2. View Engine Configuration (EJS)
+// ==========================================
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Mock user context globally for EJS rendering
-app.use((req, res, next) => {
-  res.locals.user = { username: 'POC-Admin' };
-  res.locals.activePage = '';
-  next();
-});
+// ==========================================
+// 3. Import & Mount Modular Routes
+// ==========================================
+const companyApiRoutes = require('./routes/company');
+app.use('/api/company', companyApiRoutes);
 
 // ==========================================
-// 2. Modular Route Mounting
+// 4. Page Rendering Routes
 // ==========================================
-const companyRoutes = require('./routes/company');
-const shortformRoutes = require('./routes/shortform');
 
-// Direct mounting without auth wrappers
-app.use('/', companyRoutes);
-app.use('/', shortformRoutes);
-
-// Root Redirect
+// Root Redirect -> /company
 app.get('/', (req, res) => {
   res.redirect('/company');
 });
 
+// Company Management Page
+app.get('/company', (req, res) => {
+  const sql = 'SELECT * FROM CompanyInfo ORDER BY id DESC';
+  
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching from CompanyInfo:', err.message);
+      return res.status(500).send('Database error rendering company page');
+    }
+    // Render views/company.ejs and pass companies array
+    res.render('company', { companies: rows || [] });
+  });
+});
+
+// Shortform Page
+app.get('/shortform', (req, res) => {
+  res.render('shortform');
+});
+
 // ==========================================
-// 3. Start Server
+// 5. Server Initialization
 // ==========================================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 POC Server running on http://localhost:${PORT}`);
+  console.log(`Server is running at http://localhost:${PORT}`);
 });
