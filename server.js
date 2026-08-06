@@ -37,7 +37,7 @@ app.get('/', (req, res) => {
 
 // Company Management Page
 app.get('/company', (req, res) => {
-  const sql = 'SELECT * FROM CompanyInfo ORDER BY id DESC';
+  const sql = 'SELECT * FROM CompanyInfo ORDER BY CompanyInfoId DESC';
   
   db.all(sql, [], (err, rows) => {
     if (err) {
@@ -47,11 +47,6 @@ app.get('/company', (req, res) => {
     // Render views/company.ejs and pass companies array
     res.render('company', { companies: rows || [] });
   });
-});
-
-// Shortform Page
-app.get('/shortform', (req, res) => {
-  res.render('shortform');
 });
 
 // ==========================================
