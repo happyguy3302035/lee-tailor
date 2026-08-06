@@ -1,0 +1,275 @@
+const express = require('express');
+const session = require('express-session');
+const path = require('path');
+const db = require('./database'); // Import SQLite Database instance
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// -------------------------------------------------------------
+// 1. Template Engine Setup (EJS)
+// -------------------------------------------------------------
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// -------------------------------------------------------------
+// 2. Parsers & Network Configuration
+// -------------------------------------------------------------
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Trust Nginx / Reverse Proxy headers (X-Forwarded-For)
+app.set('trust proxy', true);
+
+// Session Store Configuration
+app.use(session({
+  secret: 'ltms-system-secret-key-2026', // Replace with a secure environment variable in production
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Set to true if terminating SSL directly without proxy
+    httpOnly: true,
+    maxAge: 8 * 60 * 60 * 1000 // Session valid for 8 hours
+  }
+}));
+
+// Serve static assets (login.html, CSS, Client JS, Images) from /public
+app.use(express.static(path.join(__dirname, 'public')));
+
+// -------------------------------------------------------------
+// 🔐 Middlewares: Authentication & IP Access Control
+// -------------------------------------------------------------
+
+// Require valid session for protected views and endpoints
+function requireAuth(req, res, next) {
+  if (req.session && req.session.user) {
+    return next(); // Authenticated -> Proceed
+  }
+  // Unauthenticated -> Redirect to login page
+  res.redirect('/login.html');
+}
+
+// Allowed IP addresses for C / U / D operations (Create, Update, Delete)
+const ALLOWED_WRITE_IPS = [
+  '94.8.186.248', // 公司/辦公室 IP
+  '127.0.0.1',       // 本地端 VM
+  '::1',              // IPv6 本地端
+  '::ffff:127.0.0.1'
+];
+
+// IP Restriction Middleware
+function restrictWriteAccess(req, res, next) {
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return next();
+  }
+
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const formattedIp = clientIp ? clientIp.replace('::ffff:', '').split(',')[0].trim() : '';
+
+  if (ALLOWED_WRITE_IPS.includes(formattedIp)) {
+    return next();
+  }
+
+  console.warn(`[WARN] Blocked Write Attempt | Method: ${req.method} | IP: ${formattedIp} | Path: ${req.path}`);
+
+  return res.status(403).json({
+    success: false,
+    message: 'Permission denied: Your IP address is restricted to Read-Only access.'
+  });
+}
+
+// Apply IP restriction middleware globally to all API routes
+app.use('/api', restrictWriteAccess);
+
+// -------------------------------------------------------------
+// 🛡️ Protected Server-Rendered EJS Routes (Clean URLs)
+// -------------------------------------------------------------
+
+// Redirect legacy /index.html requests to clean root /
+app.get('/index.html', (req, res) => {
+  res.redirect('/');
+});
+
+// 1. Home / Main Quotation Management Dashboard
+app.get('/', requireAuth, (req, res) => {
+  res.render('index', { 
+    activePage: 'index',
+    user: req.session.user 
+  });
+});
+
+// 2. Company Info Management View
+app.get('/company', requireAuth, (req, res) => {
+  const sql = `SELECT * FROM CompanyInfo ORDER BY id DESC`;
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching companies:', err.message);
+      return res.status(500).send('Database Error');
+    }
+    res.render('company', {
+      activePage: 'company',
+      user: req.session.user,
+      companies: rows || []
+    });
+  });
+});
+
+// -------------------------------------------------------------
+// 🔑 Authentication API Endpoints
+// -------------------------------------------------------------
+
+// Login Endpoint
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === 'admin' && password === 'admin123') {
+    req.session.user = { username, role: 'admin' };
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      redirectUrl: '/'
+    });
+  }
+
+  res.status(401).json({
+    success: false,
+    message: 'Invalid username or password'
+  });
+});
+
+// Logout Endpoint
+app.get('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Logout failed' });
+    }
+    res.clearCookie('connect.sid');
+    res.redirect('/login.html');
+  });
+});
+
+// -------------------------------------------------------------
+// 🏢 Company CRUD API Endpoints
+// -------------------------------------------------------------
+
+// READ ALL: Get all company records
+app.get('/api/company', requireAuth, (req, res) => {
+  const sql = `SELECT * FROM CompanyInfo ORDER BY id DESC`;
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    res.json({ success: true, data: rows });
+  });
+});
+
+// READ SINGLE: Get company by ID
+app.get('/api/company/:id', requireAuth, (req, res) => {
+  const sql = `SELECT * FROM CompanyInfo WHERE id = ?`;
+  db.get(sql, [req.params.id], (err, row) => {
+    if (err || !row) {
+      return res.status(404).json({ success: false, message: 'Company record not found.' });
+    }
+    res.json({ success: true, data: row });
+  });
+});
+
+// CREATE: Add a new company record
+app.post('/api/company', requireAuth, (req, res) => {
+  const { name, email, phone, mobile, fax, address } = req.body;
+
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ success: false, message: 'Company name is required' });
+  }
+
+  const sql = `
+    INSERT INTO CompanyInfo (Name, Email, Phone, Mobile, Fax, Address, createddatetime, updateddatetime)
+    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  `;
+
+  const params = [
+    name.trim(),
+    email ? email.trim() : null,
+    phone ? phone.trim() : null,
+    mobile ? mobile.trim() : null,
+    fax ? fax.trim() : null,
+    address ? address.trim() : null
+  ];
+
+  db.run(sql, params, function (err) {
+    if (err) {
+      console.error('Error inserting company:', err.message);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+
+    res.json({
+      success: true,
+      message: 'Company added successfully',
+      data: { id: this.lastID }
+    });
+  });
+});
+
+// UPDATE: Modify existing company record
+app.put('/api/company/:id', requireAuth, (req, res) => {
+  const { name, email, phone, mobile, fax, address } = req.body;
+  const sql = `
+    UPDATE CompanyInfo 
+    SET Name = ?, Email = ?, Phone = ?, Mobile = ?, Fax = ?, Address = ?, 
+        updateddatetime = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `;
+
+  const params = [
+    name.trim(),
+    email ? email.trim() : null,
+    phone ? phone.trim() : null,
+    mobile ? mobile.trim() : null,
+    fax ? fax.trim() : null,
+    address ? address.trim() : null,
+    id
+  ];
+
+  db.run(sql, params, function (err) {
+    if (err) {
+      console.error('Error updating company:', err.message);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Company not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Company updated successfully'
+    });
+  });
+});
+
+// DELETE: Remove company record
+app.delete('/api/company/:id', requireAuth, (req, res) => {
+  const sql = `DELETE FROM CompanyInfo WHERE id = ?`;
+  db.run(sql, [req.params.id], function(err) {
+    if (err) {
+      console.error('Error deleting company:', err.message);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Company not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Company deleted successfully'
+    });
+  });
+});
+
+// -------------------------------------------------------------
+// 🚀 Start Server
+// -------------------------------------------------------------
+app.listen(PORT, () => {
+  console.log(`[LTMS System] Server running on http://localhost:${PORT}`);
+});
