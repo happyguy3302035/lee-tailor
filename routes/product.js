@@ -22,76 +22,148 @@ router.get('/', (req, res) => {
 });
 
 // 2. CREATE: Add a new product
+// ==========================================
+// GET /product/add - Render Add Form
+// ==========================================
+router.get('/add', (req, res) => {
+  const sqlComponents = 'SELECT ComponentId, NameCHS, NameENG, NameShort FROM Component ORDER BY NameCHS ASC';
+  
+  db.all(sqlComponents, [], (err, availableComponents) => {
+    if (err) console.error('Error fetching components:', err.message);
+    res.render('product-add', {
+      availableComponents: availableComponents || [],
+      activePage: 'product'
+    });
+  });
+});
+
+// ==========================================
+// POST /product/add - Save New Product & Linkages
+// ==========================================
 router.post('/add', (req, res) => {
-  const { NameCHS, NameENG, NameShort, Remark, ReportPriority, Priority } = req.body;
+  const { Name, Code, Remark, componentIds } = req.body; // Adapt fields to match your Product schema
 
-  if (!NameCHS || !NameENG || !NameShort) {
-    return res.redirect('/product?err=' + encodeURIComponent('Chinese Name, English Name, and Short Name are required.'));
-  }
+  const sqlProduct = 'INSERT INTO Product (Name, Code, Remark) VALUES (?, ?, ?)';
+  const paramsProduct = [Name, Code, Remark];
 
-  const priorityVal = Priority !== '' && Priority !== undefined ? parseInt(Priority, 10) : null;
-  const reportPriorityVal = ReportPriority !== '' && ReportPriority !== undefined ? parseInt(ReportPriority, 10) : null;
-
-  const sql = `
-    INSERT INTO Product (NameCHS, NameENG, NameShort, Remark, ReportPriority, Priority) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-
-  db.run(sql, [
-    NameCHS.trim(), 
-    NameENG.trim(), 
-    NameShort.trim(), 
-    Remark ? Remark.trim() : null, 
-    reportPriorityVal, 
-    priorityVal
-  ], function(err) {
+  db.run(sqlProduct, paramsProduct, function(err) {
     if (err) {
-      console.error('Error creating Product:', err.message);
-      let errMsg = 'Failed to create product.';
-      if (err.message.includes('UNIQUE constraint failed')) {
-        errMsg = 'A product with that Chinese Name, English Name, or Short Name already exists.';
-      }
-      return res.redirect('/product?err=' + encodeURIComponent(errMsg));
+      console.error('Error creating product:', err.message);
+      return res.redirect('/product?err=' + encodeURIComponent('Failed to create product.'));
     }
-    res.redirect('/product?msg=created');
+
+    const newProductId = this.lastID;
+
+    // Normalize componentIds array
+    let idsToInsert = [];
+    if (Array.isArray(componentIds)) idsToInsert = componentIds;
+    else if (componentIds) idsToInsert = [componentIds];
+
+    if (idsToInsert.length === 0) {
+      return res.redirect('/product?msg=created');
+    }
+
+    const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId, InvoiceManagementId) VALUES (?, ?, 0)');
+    let insertedCount = 0;
+
+    idsToInsert.forEach((compId) => {
+      stmt.run([newProductId, compId], (err) => {
+        if (err) console.error(`Error linking Component #${compId}:`, err.message);
+        insertedCount++;
+        if (insertedCount === idsToInsert.length) {
+          stmt.finalize();
+          res.redirect('/product?msg=created');
+        }
+      });
+    });
   });
 });
 
 // 3. UPDATE: Edit existing product
-router.post('/update', (req, res) => {
-  const { ProductId, NameCHS, NameENG, NameShort, Remark, ReportPriority, Priority } = req.body;
+// ==========================================
+// GET /product/edit/:id - Render Edit Form
+// ==========================================
+router.get('/edit/:id', (req, res) => {
+  const productId = req.params.id;
 
-  if (!ProductId || !NameCHS || !NameENG || !NameShort) {
-    return res.redirect('/product?err=' + encodeURIComponent('Missing required fields.'));
-  }
+  db.get('SELECT * FROM Product WHERE ProductId = ?', [productId], (err, product) => {
+    if (err || !product) return res.status(404).send('Product not found');
 
-  const priorityVal = Priority !== '' && Priority !== undefined ? parseInt(Priority, 10) : null;
-  const reportPriorityVal = ReportPriority !== '' && ReportPriority !== undefined ? parseInt(ReportPriority, 10) : null;
+    // Fetch existing linked components
+    const linkedSql = `
+      SELECT pc.ProductComponentId, pc.ComponentId, c.NameCHS, c.NameENG, c.NameShort
+      FROM ProductComponent pc
+      JOIN Component c ON pc.ComponentId = c.ComponentId
+      WHERE pc.ProductId = ?
+    `;
 
-  const sql = `
-    UPDATE Product 
-    SET NameCHS = ?, NameENG = ?, NameShort = ?, Remark = ?, ReportPriority = ?, Priority = ?
-    WHERE ProductId = ?
-  `;
+    db.all(linkedSql, [productId], (err, linkedComponents) => {
+      if (err) console.error('Error fetching linked components:', err.message);
 
-  db.run(sql, [
-    NameCHS.trim(), 
-    NameENG.trim(), 
-    NameShort.trim(), 
-    Remark ? Remark.trim() : null, 
-    reportPriorityVal, 
-    priorityVal, 
-    ProductId
-  ], function(err) {
-    if (err) {
-      console.error('Error updating Product:', err.message);
-      let errMsg = 'Failed to update product.';
-      if (err.message.includes('UNIQUE constraint failed')) {
-        errMsg = 'A product with that Chinese Name, English Name, or Short Name already exists.';
+      // Fetch all available components for dropdown selection
+      db.all('SELECT ComponentId, NameCHS, NameENG, NameShort FROM Component ORDER BY NameCHS ASC', [], (err, availableComponents) => {
+        if (err) console.error('Error fetching available components:', err.message);
+
+        res.render('product-edit', {
+          product,
+          linkedComponents: linkedComponents || [],
+          availableComponents: availableComponents || [],
+          activePage: 'product'
+        });
+      });
+    });
+  });
+});
+
+// ==========================================
+// POST /product/edit/:id - Update Product & Linkages
+// ==========================================
+router.post('/edit/:id', (req, res) => {
+  const productId = req.params.id;
+  const { Name, Code, Remark, componentIds } = req.body;
+
+  let idsToInsert = [];
+  if (Array.isArray(componentIds)) idsToInsert = componentIds;
+  else if (componentIds) idsToInsert = [componentIds];
+
+  const updateProductSql = 'UPDATE Product SET Name = ?, Code = ?, Remark = ? WHERE ProductId = ?';
+  const paramsProduct = [Name, Code, Remark, productId];
+
+  db.serialize(() => {
+    // 1. Update Product Details
+    db.run(updateProductSql, paramsProduct, function(err) {
+      if (err) {
+        console.error('Error updating product:', err.message);
+        return res.redirect('/product?err=' + encodeURIComponent('Failed to update product.'));
       }
-      return res.redirect('/product?err=' + encodeURIComponent(errMsg));
-    }
-    res.redirect('/product?msg=updated');
+
+      // 2. Clear Old Linkages
+      db.run('DELETE FROM ProductComponent WHERE ProductId = ?', [productId], (err) => {
+        if (err) {
+          console.error('Error clearing old linkages:', err.message);
+          return res.redirect('/product?err=' + encodeURIComponent('Failed to update components.'));
+        }
+
+        if (idsToInsert.length === 0) {
+          return res.redirect('/product?msg=updated');
+        }
+
+        // 3. Re-insert Selected Components
+        const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId, InvoiceManagementId) VALUES (?, ?, 0)');
+        let insertedCount = 0;
+
+        idsToInsert.forEach((compId) => {
+          stmt.run([productId, compId], (err) => {
+            if (err) console.error(`Error linking Component #${compId}:`, err.message);
+            insertedCount++;
+            if (insertedCount === idsToInsert.length) {
+              stmt.finalize();
+              res.redirect('/product?msg=updated');
+            }
+          });
+        });
+      });
+    });
   });
 });
 
