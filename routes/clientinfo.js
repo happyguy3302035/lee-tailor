@@ -252,21 +252,30 @@ router.get('/edit/:id', (req, res) => {
 
 // ==========================================
 // 5. UPDATE (Action): Process Edit Client Form
-// POST /clientinfo/update
+// POST /clientinfo/edit/:id
 // ==========================================
-router.post('/update', (req, res) => {
+router.post('/edit/:id', (req, res) => {
+  const ClientId = req.params.id;
   const {
-    ClientId, Name, NameShort, Address,
+    Name, NameShort, Address,
     PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
     SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
-    Remark
+    Remark, orderCodeIds
   } = req.body;
 
   if (!ClientId || !Name || !Name.trim() || !NameShort || !NameShort.trim()) {
     return res.redirect('/clientinfo?err=' + encodeURIComponent('Client ID, Name, and Short Name are required.'));
   }
 
-  const sql = `
+  // 1. Normalize incoming orderCodeIds into an array (handles 0, 1, or multiple items)
+  let idsToInsert = [];
+  if (Array.isArray(orderCodeIds)) {
+    idsToInsert = orderCodeIds;
+  } else if (orderCodeIds) {
+    idsToInsert = [orderCodeIds];
+  }
+
+  const updateSql = `
     UPDATE ClientInfo SET
       Name = ?,
       NameShort = ?,
@@ -299,16 +308,49 @@ router.post('/update', (req, res) => {
     ClientId
   ];
 
-  db.run(sql, params, function(err) {
-    if (err) {
-      console.error('Error updating client record:', err.message);
-      let errMsg = 'Failed to update client record.';
-      if (err.message.includes('UNIQUE constraint failed')) {
-        errMsg = 'A client with that Name or Short Name already exists.';
+  // 2. Use db.serialize to run queries in strict sequence
+  db.serialize(() => {
+    // Step A: Update ClientInfo table
+    db.run(updateSql, params, function(err) {
+      if (err) {
+        console.error('Error updating client record:', err.message);
+        let errMsg = 'Failed to update client record.';
+        if (err.message.includes('UNIQUE constraint failed')) {
+          errMsg = 'A client with that Name or Short Name already exists.';
+        }
+        return res.redirect('/clientinfo?err=' + encodeURIComponent(errMsg));
       }
-      return res.redirect('/clientinfo?err=' + encodeURIComponent(errMsg));
-    }
-    res.redirect('/clientinfo?msg=updated');
+
+      // Step B: Wipe existing order code linkages for this client
+      db.run('DELETE FROM ClientAndOrderCode WHERE ClientId = ?', [ClientId], (err) => {
+        if (err) {
+          console.error('Error clearing old linkages:', err.message);
+          return res.redirect('/clientinfo?err=' + encodeURIComponent('Failed to update order codes.'));
+        }
+
+        // Step C: If no new order codes were attached, finish up
+        if (idsToInsert.length === 0) {
+          return res.redirect('/clientinfo?msg=updated');
+        }
+
+        // Step D: Insert new linkages
+        const stmt = db.prepare('INSERT INTO ClientAndOrderCode (ClientId, OrderCodeId) VALUES (?, ?)');
+        let insertedCount = 0;
+
+        idsToInsert.forEach((codeId) => {
+          stmt.run([ClientId, codeId], (err) => {
+            if (err) {
+              console.error(`Error linking OrderCode #${codeId}:`, err.message);
+            }
+            insertedCount++;
+            if (insertedCount === idsToInsert.length) {
+              stmt.finalize();
+              res.redirect('/clientinfo?msg=updated');
+            }
+          });
+        });
+      });
+    });
   });
 });
 
