@@ -65,4 +65,133 @@ router.post('/save', (req, res) => {
   });
 });
 
+// ==========================================
+// 1. GET /clientinfo/add
+// ==========================================
+router.get('/add', (req, res) => {
+  db.all('SELECT * FROM OrderCode ORDER BY OrderCodeId ASC', [], (err, orderCodes) => {
+    if (err) {
+      console.error('Error fetching order codes:', err.message);
+      orderCodes = [];
+    }
+    res.render('clientinfo-add', {
+      availableOrderCodes: orderCodes,
+      linkedOrderCodes: [],
+      activePage: 'clientinfo'
+    });
+  });
+});
+
+// ==========================================
+// 2. POST /clientinfo/add
+// ==========================================
+router.post('/add', (req, res) => {
+  const { Name, NameShort, PrimaryContactName /*, other ClientInfo fields */ } = req.body;
+  
+  // Normalize array input from form
+  let orderCodeIds = req.body['orderCodeIds[]'] || req.body.orderCodeIds || [];
+  if (!Array.isArray(orderCodeIds)) {
+    orderCodeIds = [orderCodeIds];
+  }
+
+  const sqlInsertClient = `INSERT INTO ClientInfo (Name, NameShort, PrimaryContactName) VALUES (?, ?, ?)`;
+
+  db.run(sqlInsertClient, [Name, NameShort, PrimaryContactName], function (err) {
+    if (err) {
+      console.error('Error inserting ClientInfo:', err.message);
+      return res.status(500).send('Database Error');
+    }
+
+    const newClientId = this.lastID;
+
+    // Save ClientAndOrderCode linkages
+    if (orderCodeIds.length > 0) {
+      const stmt = db.prepare('INSERT INTO ClientAndOrderCode (ClientId, OrderCodeId) VALUES (?, ?)');
+      orderCodeIds.forEach(orderCodeId => {
+        stmt.run([newClientId, orderCodeId]);
+      });
+      stmt.finalize();
+    }
+
+    res.redirect('/clientinfo?msg=Client+created+successfully');
+  });
+});
+
+// ==========================================
+// 3. GET /clientinfo/edit/:id
+// ==========================================
+router.get('/edit/:id', (req, res) => {
+  const clientId = req.params.id;
+
+  // Query 1: Fetch Client Info
+  db.get('SELECT * FROM ClientInfo WHERE ClientId = ?', [clientId], (err, client) => {
+    if (err || !client) {
+      return res.status(404).send('Client not found');
+    }
+
+    // Query 2: Fetch All Order Codes for Dropdown
+    db.all('SELECT * FROM OrderCode ORDER BY OrderCodeId ASC', [], (err, availableOrderCodes) => {
+      if (err) availableOrderCodes = [];
+
+      // Query 3: Fetch Currently Linked Order Codes for this Client
+      const linkedSql = `
+        SELECT cl.ClientAndOrderCodeId, cl.OrderCodeId, oc.CodeName
+        FROM ClientAndOrderCode cl
+        JOIN OrderCode oc ON cl.OrderCodeId = oc.OrderCodeId
+        WHERE cl.ClientId = ?
+      `;
+
+      db.all(linkedSql, [clientId], (err, linkedOrderCodes) => {
+        if (err) linkedOrderCodes = [];
+
+        res.render('clientinfo-edit', {
+          client,
+          availableOrderCodes,
+          linkedOrderCodes: linkedOrderCodes || [],
+          activePage: 'clientinfo'
+        });
+      });
+    });
+  });
+});
+
+// ==========================================
+// 4. POST /clientinfo/edit/:id
+// ==========================================
+router.post('/edit/:id', (req, res) => {
+  const clientId = req.params.id;
+  const { Name, NameShort, PrimaryContactName } = req.body;
+
+  // Normalize array input from form
+  let orderCodeIds = req.body['orderCodeIds[]'] || req.body.orderCodeIds || [];
+  if (!Array.isArray(orderCodeIds)) {
+    orderCodeIds = [orderCodeIds];
+  }
+
+  const sqlUpdateClient = `UPDATE ClientInfo SET Name = ?, NameShort = ?, PrimaryContactName = ? WHERE ClientId = ?`;
+
+  db.run(sqlUpdateClient, [Name, NameShort, PrimaryContactName, clientId], function (err) {
+    if (err) {
+      console.error('Error updating ClientInfo:', err.message);
+      return res.status(500).send('Database Error');
+    }
+
+    // Refresh linkages: Delete existing linkages then insert new ones
+    db.run('DELETE FROM ClientAndOrderCode WHERE ClientId = ?', [clientId], (err) => {
+      if (err) {
+        console.error('Error clearing old linkages:', err.message);
+      }
+
+      if (orderCodeIds.length > 0) {
+        const stmt = db.prepare('INSERT INTO ClientAndOrderCode (ClientId, OrderCodeId) VALUES (?, ?)');
+        orderCodeIds.forEach(orderCodeId => {
+          stmt.run([clientId, orderCodeId]);
+        });
+        stmt.finalize();
+      }
+
+      res.redirect('/clientinfo?msg=Client+updated+successfully');
+    });
+  });
+});
 module.exports = router;
