@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
+console.log('[DEBUG] Loading routes/clientinfo.js file...');
+
 // ==========================================
 // 1. READ: List Client Records (Search & Pagination)
 // GET /clientinfo
@@ -111,11 +113,13 @@ router.get('/', (req, res) => {
 // GET /clientinfo/add
 // ==========================================
 router.get('/add', (req, res) => {
+  console.log('[DEBUG] Hit GET /clientinfo/add route handler!');
   db.all('SELECT * FROM OrderCode', [], (err, orderCodes) => {
     if (err) {
       console.error('Error fetching order codes:', err.message);
       orderCodes = [];
     }
+    console.log('[DEBUG] Rendering clientinfo-add view...');
     res.render('clientinfo-add', {
       availableOrderCodes: orderCodes || [],
       activePage: 'clientinfo'
