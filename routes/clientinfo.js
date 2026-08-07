@@ -2,11 +2,21 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
-// 1. READ: List all Client Records
+// 1. READ: List Client Records with Search
 router.get('/', (req, res) => {
-  const sql = 'SELECT * FROM ClientInfo ORDER BY ClientId DESC';
+  const searchQuery = req.query.search ? req.query.search.trim() : '';
 
-  db.all(sql, [], (err, rows) => {
+  let sql = 'SELECT * FROM ClientInfo';
+  const params = [];
+
+  if (searchQuery) {
+    sql += ' WHERE Name LIKE ?';
+    params.push(`%${searchQuery}%`);
+  }
+
+  sql += ' ORDER BY ClientId DESC';
+
+  db.all(sql, params, (err, rows) => {
     if (err) {
       console.error('Error fetching client info:', err.message);
       return res.status(500).send('Database error');
@@ -14,6 +24,7 @@ router.get('/', (req, res) => {
 
     res.render('clientinfo', {
       clients: rows || [],
+      searchQuery: searchQuery,
       message: req.query.msg || null,
       error: req.query.err || null,
       activePage: 'clientinfo'
@@ -143,5 +154,7 @@ router.post('/delete/:id', (req, res) => {
     res.redirect('/clientinfo?msg=deleted');
   });
 });
+
+
 
 module.exports = router;
