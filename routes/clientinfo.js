@@ -213,6 +213,49 @@ router.post('/update', (req, res) => {
   });
 });
 
+// ==========================================
+// GET /clientinfo/edit/:id (Render Edit Form)
+// ==========================================
+router.get('/edit/:id', (req, res) => {
+  const clientId = req.params.id;
+
+  // 1. Fetch Client Details
+  db.get('SELECT * FROM ClientInfo WHERE ClientId = ?', [clientId], (err, client) => {
+    if (err || !client) {
+      return res.status(404).send('Client not found');
+    }
+
+    // 2. Fetch Currently Linked Order Codes
+    const linkedSql = `
+      SELECT coc.OrderCodeId, oc.CodeName 
+      FROM ClientAndOrderCode coc
+      LEFT JOIN OrderCode oc ON coc.OrderCodeId = oc.OrderCodeId
+      WHERE coc.ClientId = ?
+    `;
+
+    db.all(linkedSql, [clientId], (err, linkedOrderCodes) => {
+      if (err) {
+        console.error('Error fetching linked order codes:', err.message);
+      }
+
+      // 3. Fetch All Available Order Codes for the selection dropdown
+      db.all('SELECT * FROM OrderCode', [], (err, availableOrderCodes) => {
+        if (err) {
+          console.error('Error fetching available order codes:', err.message);
+        }
+
+        res.render('clientinfo-edit', {
+          client,
+          linkedOrderCodes: linkedOrderCodes || [],
+          availableOrderCodes: availableOrderCodes || [],
+          activePage: 'clientinfo'
+        });
+      });
+    });
+  });
+});
+
+
 // 4. GET /clientinfo/delete/:id (Confirmation Screen)
 router.get('/delete/:id', (req, res) => {
   const clientId = req.params.id;
