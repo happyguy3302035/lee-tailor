@@ -227,6 +227,40 @@ router.post('/delete/:id', (req, res) => {
   });
 });
 
+// GET /clientinfo/delete/:id (Confirmation Screen)
+router.get('/delete/:id', (req, res) => {
+  const clientId = req.params.id;
 
+  db.get('SELECT * FROM ClientInfo WHERE ClientId = ?', [clientId], (err, client) => {
+    if (err || !client) {
+      return res.status(404).send('Client not found');
+    }
+
+    res.render('clientinfo-delete', {
+      client,
+      activePage: 'clientinfo'
+    });
+  });
+});
+
+// POST /clientinfo/delete/:id (Action)
+router.post('/delete/:id', (req, res) => {
+  const clientId = req.params.id;
+
+  db.run('DELETE FROM ClientAndOrderCode WHERE ClientId = ?', [clientId], (err) => {
+    if (err) {
+      console.error('Error clearing linkages:', err.message);
+    }
+
+    db.run('DELETE FROM ClientInfo WHERE ClientId = ?', [clientId], function (err) {
+      if (err) {
+        console.error('Error deleting client:', err.message);
+        return res.status(500).send('Database Error');
+      }
+
+      res.redirect('/clientinfo?msg=Client+deleted+successfully');
+    });
+  });
+});
 
 module.exports = router;
