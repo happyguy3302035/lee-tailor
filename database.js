@@ -101,9 +101,25 @@ db.serialize(() => {
     if (err) {
       console.error('Error creating Product table:', err.message);
     } else {
-      console.log('Component table initialized successfully.');
+      console.log('Product table initialized successfully.');
     }
   });
+
+  // 4. Factory Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Factory (
+      FactoryId INTEGER PRIMARY KEY AUTOINCREMENT,
+      Name TEXT UNIQUE NOT NULL,
+      Priority INTEGER
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating Factory table:', err.message);
+    } else {
+      console.log('Factory table initialized successfully.');
+    }
+  });
+
   
 });
 
