@@ -53,7 +53,7 @@ db.serialize(() => {
     }
   });
   
-  // 2. OrderCode Table
+  // 3. OrderCode Table
   db.run(`
     CREATE TABLE IF NOT EXISTS OrderCode (
       OrderCodeId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +68,7 @@ db.serialize(() => {
     }
   });
 
-  // 3. Component Table
+  // 4. Component Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Component (
       ComponentId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,7 +86,7 @@ db.serialize(() => {
     }
   });
 
-  // 4. Product Table
+  // 5. Product Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Product (
       ProductId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,7 +105,7 @@ db.serialize(() => {
     }
   });
 
-  // 4. Factory Table
+  // 6. Factory Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Factory (
       FactoryId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,7 +120,7 @@ db.serialize(() => {
     }
   });
 
-  // 5. Transport Table
+  // 7. Transport Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Transport (
       TransportId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,7 +135,7 @@ db.serialize(() => {
     }
   });
 
-  // 6. ClientInfo Table
+  // 8. ClientInfo Table
   db.run(`
     CREATE TABLE IF NOT EXISTS ClientInfo (
       ClientId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -160,7 +160,22 @@ db.serialize(() => {
     }
   });
 
-
+  // 9. ClientAndOrderCode Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ClientAndOrderCode (
+      ClientAndOrderCodeId INTEGER PRIMARY KEY AUTOINCREMENT,
+      ClientId INTEGER NOT NULL,
+      OrderCodeId INTEGER NOT NULL,
+      FOREIGN KEY (ClientId) REFERENCES ClientInfo(ClientId) ON DELETE CASCADE,
+      FOREIGN KEY (OrderCodeId) REFERENCES OrderCode(OrderCodeId)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating ClientAndOrderCode table:', err.message);
+    } else {
+      console.log('ClientAndOrderCode table initialized successfully.');
+    }
+  });
 
 
 
