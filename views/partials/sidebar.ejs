@@ -50,20 +50,35 @@
           </a>
         </li>
 
-        <!-- Components Link -->
-        <li class="nav-item">
-          <a href="/component" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'component') ? 'active' : '' %>">
-            <i class="nav-icon fas fa-cubes"></i>
-            <p>Components</p>
+        <!-- Products & Component Treeview (Parent) -->
+        <li class="nav-item <%= (typeof activeParent !== 'undefined' && activeParent === 'products_component') ? 'menu-open' : '' %>">
+          <a href="#" class="nav-link <%= (typeof activeParent !== 'undefined' && activeParent === 'products_component') ? 'active' : '' %>">
+            <i class="nav-icon fas fa-cogs"></i>
+            <p>
+              Products & Component
+              <i class="right fas fa-angle-left"></i>
+            </p>
           </a>
-        </li>
+          <ul class="nav nav-treeview">
+            <!-- Factory Sub-item -->
+             <!-- Products Link -->
+	        <li class="nav-item">
+	          <a href="/product" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'product') ? 'active' : '' %>">
+	            <i class="nav-icon fas fa-box"></i>
+	            <p>Products</p>
+	          </a>
+	        </li>
+            
+	        <!-- Components Link -->
+	        <li class="nav-item">
+	          <a href="/component" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'component') ? 'active' : '' %>">
+	            <i class="nav-icon fas fa-cubes"></i>
+	            <p>Components</p>
+	          </a>
+	        </li>
 
-        <!-- Products Link -->
-        <li class="nav-item">
-          <a href="/product" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'product') ? 'active' : '' %>">
-            <i class="nav-icon fas fa-box"></i>
-            <p>Products</p>
-          </a>
+
+          </ul>
         </li>
 
         <!-- System Treeview (Parent) -->
