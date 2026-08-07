@@ -177,6 +177,23 @@ db.serialize(() => {
     }
   });
 
+  // 10. ProductComponent Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ProductComponent (
+      ProductComponentId INTEGER PRIMARY KEY AUTOINCREMENT,
+      InvoiceManagementId INTEGER NOT NULL DEFAULT 0,
+      ProductId INTEGER,
+      ComponentId INTEGER,
+      FOREIGN KEY (ProductId) REFERENCES Product(ProductId),
+      FOREIGN KEY (ComponentId) REFERENCES Component(ComponentId)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating ProductComponent table:', err.message);
+    } else {
+      console.log('ProductComponent table initialized successfully.');
+    }
+  });
 
 
 
