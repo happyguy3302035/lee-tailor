@@ -222,7 +222,7 @@ router.get('/edit/:id', (req, res) => {
 
     // Fetch linked order codes
     const linkedSql = `
-      SELECT coc.OrderCodeId, oc.CodeName 
+      SELECT coc.OrderCodeId, oc.Name 
       FROM ClientAndOrderCode coc
       LEFT JOIN OrderCode oc ON coc.OrderCodeId = oc.OrderCodeId
       WHERE coc.ClientId = ?
