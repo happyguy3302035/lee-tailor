@@ -1,8 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { getCachedComponents } = require('./component'); // Destructuring still works!
 
-// 1. READ: Get all products
+// ==========================================
+// 1. READ: List Product Records
+// GET /product
+// ==========================================
 router.get('/', (req, res) => {
   const sql = 'SELECT * FROM Product ORDER BY Priority ASC, ProductId DESC';
 
@@ -21,15 +25,16 @@ router.get('/', (req, res) => {
   });
 });
 
-// 2. CREATE: Add a new product
 // ==========================================
+// 2. CREATE: Add a new product
 // GET /product/add - Render Add Form
 // ==========================================
 router.get('/add', (req, res) => {
-  const sqlComponents = 'SELECT ComponentId, NameCHS, NameENG, NameShort FROM Component ORDER BY NameCHS ASC';
-  
-  db.all(sqlComponents, [], (err, availableComponents) => {
-    if (err) console.error('Error fetching components:', err.message);
+  getCachedComponents((err, orderCodes) => {
+    if (err) {
+      console.error('Error fetching order codes:', err.message);
+      orderCodes = [];
+    }
     res.render('product-add', {
       availableComponents: availableComponents || [],
       activePage: 'product'
@@ -63,7 +68,7 @@ router.post('/add', (req, res) => {
       return res.redirect('/product?msg=created');
     }
 
-    const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId, InvoiceManagementId) VALUES (?, ?, 0)');
+    const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId) VALUES (?, ?)');
     let insertedCount = 0;
 
     idsToInsert.forEach((compId) => {
@@ -101,9 +106,10 @@ router.get('/edit/:id', (req, res) => {
       if (err) console.error('Error fetching linked components:', err.message);
 
       // Fetch all available components for dropdown selection
-      db.all('SELECT ComponentId, NameCHS, NameENG, NameShort FROM Component ORDER BY NameCHS ASC', [], (err, availableComponents) => {
-        if (err) console.error('Error fetching available components:', err.message);
-
+      getCachedComponents((err, availableComponents) => {
+        if (err) {
+          console.error('Error fetching available order codes:', err.message);
+        }
         res.render('product-edit', {
           product,
           linkedComponents: linkedComponents || [],
@@ -154,7 +160,9 @@ router.post('/edit/:id', (req, res) => {
 
         idsToInsert.forEach((compId) => {
           stmt.run([productId, compId], (err) => {
-            if (err) console.error(`Error linking Component #${compId}:`, err.message);
+            if (err) 
+              console.error(`Error linking Component #${compId}:`, err.message);
+            }
             insertedCount++;
             if (insertedCount === idsToInsert.length) {
               stmt.finalize();
@@ -167,12 +175,39 @@ router.post('/edit/:id', (req, res) => {
   });
 });
 
-// 4. DELETE: Remove a product
-router.post('/delete/:id', (req, res) => {
-  const { id } = req.params;
-  const sql = 'DELETE FROM Product WHERE ProductId = ?';
+// ==========================================
+// 6. DELETE (Page): Render Delete Confirmation Screen
+// GET /clientinfo/delete/:id
+// ==========================================
+router.get('/delete/:id', (req, res) => {
+  const productId = req.params.id;
 
-  db.run(sql, [id], function(err) {
+  db.get('SELECT * FROM Product WHERE ProductId = ?', [productId], (err, product) => {
+    if (err || !product) {
+      return res.status(404).send('Product not found');
+    }
+
+    res.render('product-delete', {
+      client,
+      activePage: 'product'
+    });
+  });
+});
+
+// ==========================================
+// 4. DELETE: Remove a product
+// POST /product/delete/:id
+// ==========================================
+router.post('/delete/:id', (req, res) => {
+  const productId = req.params.id;
+  // Step 1: Delete linked records in ProductComponent
+  db.run('DELETE FROM ProductComponent WHERE ProductId = ?', [productId], (err) => {
+    if (err) {
+      console.error('Error clearing linkages:', err.message);
+      return res.redirect('/product?err=' + encodeURIComponent('Failed to delete associated linkages.'));
+    }
+  });
+  db.run('DELETE FROM Product WHERE ProductId = ?', [productId], function (err) {
     if (err) {
       console.error('Error deleting Product:', err.message);
       return res.redirect('/product?err=' + encodeURIComponent('Failed to delete product.'));
