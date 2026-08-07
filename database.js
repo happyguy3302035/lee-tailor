@@ -181,7 +181,6 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS ProductComponent (
       ProductComponentId INTEGER PRIMARY KEY AUTOINCREMENT,
-      InvoiceManagementId INTEGER NOT NULL DEFAULT 0,
       ProductId INTEGER,
       ComponentId INTEGER,
       FOREIGN KEY (ProductId) REFERENCES Product(ProductId),
