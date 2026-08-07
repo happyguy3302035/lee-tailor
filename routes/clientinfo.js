@@ -136,7 +136,7 @@ router.post('/add', (req, res) => {
     Name, NameShort, Address,
     PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
     SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
-    Remark
+    Remark, orderCodeIds
   } = req.body;
 
   if (!Name || !Name.trim() || !NameShort || !NameShort.trim()) {
@@ -176,7 +176,37 @@ router.post('/add', (req, res) => {
       }
       return res.redirect('/clientinfo?err=' + encodeURIComponent(errMsg));
     }
-    res.redirect('/clientinfo?msg=created');
+
+    const newClientId = this.lastID;
+
+    // Handle Order Code linkages if present
+    let idsToInsert = [];
+    if (Array.isArray(orderCodeIds)) {
+      idsToInsert = orderCodeIds;
+    } else if (orderCodeIds) {
+      idsToInsert = [orderCodeIds];
+    }
+
+    if (idsToInsert.length === 0) {
+      return res.redirect('/clientinfo?msg=created');
+    }
+
+    // Insert linkages sequentially into ClientAndOrderCode
+    const stmt = db.prepare('INSERT INTO ClientAndOrderCode (ClientId, OrderCodeId) VALUES (?, ?)');
+    let insertedCount = 0;
+
+    idsToInsert.forEach((codeId) => {
+      stmt.run([newClientId, codeId], (err) => {
+        if (err) {
+          console.error(`Error linking OrderCode #${codeId}:`, err.message);
+        }
+        insertedCount++;
+        if (insertedCount === idsToInsert.length) {
+          stmt.finalize();
+          res.redirect('/clientinfo?msg=created');
+        }
+      });
+    });
   });
 });
 
