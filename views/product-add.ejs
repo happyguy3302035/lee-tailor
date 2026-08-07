@@ -1,56 +1,118 @@
-<!-- Modal: Delete Confirmation -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form action="/product/add" method="POST" class="needs-validation" novalidate>
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="addModalLabel"><i class="fas fa-plus-circle mr-1"></i> Add Product</h5>
-          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-md-4 form-group">
-              <label for="addNameShort">Short Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="addNameShort" name="NameShort" placeholder="e.g. SUIT" required>
-              <div class="invalid-feedback">Short Name is required.</div>
-            </div>
-            <div class="col-md-4 form-group">
-              <label for="addNameCHS">Chinese Name (CHS) <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="addNameCHS" name="NameCHS" placeholder="e.g. 西装" required>
-              <div class="invalid-feedback">Chinese Name is required.</div>
-            </div>
-            <div class="col-md-4 form-group">
-              <label for="addNameENG">English Name (ENG) <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="addNameENG" name="NameENG" placeholder="e.g. Suit" required>
-              <div class="invalid-feedback">English Name is required.</div>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App Manager | Add Product</title>
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- OverlayScrollbars -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.1/css/OverlayScrollbars.min.css">
+  <!-- Theme style (AdminLTE 3) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+  <!-- Navbar Partial -->
+  <%- include('partials/navbar') %>
+
+  <!-- Sidebar Partial -->
+  <%- include('partials/sidebar', { activePage: 'product' }) %>
+
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0"><i class="fas fa-plus-circle mr-2"></i>Add Product</h1>
           </div>
-          <div class="row">
-            <div class="col-md-3 form-group">
-              <label for="addPriority">Priority (Integer)</label>
-              <input type="number" class="form-control" id="addPriority" name="Priority" placeholder="e.g. 1" step="1">
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/company">Home</a></li>
+              <li class="breadcrumb-item"><a href="/product">Products</a></li>
+              <li class="breadcrumb-item active">Add Product</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <section class="content">
+      <div class="container-fluid">
+
+        <!-- Error Alert -->
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="icon fas fa-exclamation-triangle"></i> <%= error %>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        <% } %>
+
+        <form action="/product/add" method="POST" class="needs-validation" novalidate>
+          
+          <!-- Product Information Card -->
+          <div class="card card-outline card-primary">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i> Product Information</h3>
             </div>
-            <div class="col-md-3 form-group">
-              <label for="addReportPriority">Report Priority</label>
-              <input type="number" class="form-control" id="addReportPriority" name="ReportPriority" placeholder="e.g. 1" step="1">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="addRemark">Remark</label>
-              <input type="text" class="form-control" id="addRemark" name="Remark" placeholder="Optional notes...">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4 form-group">
+                  <label for="addNameShort">Short Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="addNameShort" name="NameShort" placeholder="e.g. SUIT" required>
+                  <div class="invalid-feedback">Short Name is required.</div>
+                </div>
+
+                <div class="col-md-4 form-group">
+                  <label for="addNameCHS">Chinese Name (CHS) <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="addNameCHS" name="NameCHS" placeholder="e.g. 西装" required>
+                  <div class="invalid-feedback">Chinese Name is required.</div>
+                </div>
+
+                <div class="col-md-4 form-group">
+                  <label for="addNameENG">English Name (ENG) <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="addNameENG" name="NameENG" placeholder="e.g. Suit" required>
+                  <div class="invalid-feedback">English Name is required.</div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-3 form-group">
+                  <label for="addPriority">Priority (Integer)</label>
+                  <input type="number" class="form-control" id="addPriority" name="Priority" placeholder="e.g. 1" step="1">
+                </div>
+
+                <div class="col-md-3 form-group">
+                  <label for="addReportPriority">Report Priority</label>
+                  <input type="number" class="form-control" id="addReportPriority" name="ReportPriority" placeholder="e.g. 1" step="1">
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label for="addRemark">Remark</label>
+                  <input type="text" class="form-control" id="addRemark" name="Remark" placeholder="Optional notes...">
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- ProductComponent Panel -->
-          <div class="card card-outline card-secondary mt-3">
+          <!-- Product Component Panel Card -->
+          <div class="card card-outline card-secondary">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-puzzle-piece mr-1"></i> Product Component Panel</h3>
+              <h3 class="card-title"><i class="fas fa-puzzle-piece mr-1"></i> Product Components</h3>
             </div>
             <div class="card-body">
               <div class="row">
                 <div class="col-md-9 form-group mb-2">
-                  <select class="form-control" id="addComponentSelectAdd">
+                  <select class="form-control" id="addComponentSelect">
                     <option value="" disabled selected>-- Select Component --</option>
                     <% if (typeof components !== 'undefined' && components.length > 0) { %>
                       <% components.forEach(function(comp) { %>
@@ -60,47 +122,139 @@
                           data-nameeng="<%= comp.NameENG %>"
                           data-nameshort="<%= comp.NameShort %>"
                         >
-                          <%= comp.NameCHS %>
+                          <%= comp.NameCHS %> (<%= comp.NameENG %>)
                         </option>
                       <% }); %>
                     <% } %>
                   </select>
                 </div>
                 <div class="col-md-3 form-group mb-2">
-                  <button type="button" class="btn btn-outline-primary btn-block" id="addComponentBtnAdd">
-                    <i class="fas fa-plus"></i> Add
+                  <button type="button" class="btn btn-outline-primary btn-block" id="addComponentBtn">
+                    <i class="fas fa-plus"></i> Add Component
                   </button>
                 </div>
               </div>
 
-              <!-- Linked Components Listbox -->
-              <div class="table-responsive border rounded mt-2" style="max-height: 200px; overflow-y: auto;">
+              <!-- Linked Components Table -->
+              <div class="table-responsive border rounded mt-3" style="max-height: 250px; overflow-y: auto;">
                 <table class="table table-sm table-hover mb-0">
                   <thead class="thead-light">
                     <tr>
                       <th>Component (CHS)</th>
                       <th>Component (ENG)</th>
                       <th>Short Name</th>
-                      <th style="width: 50px;" class="text-center">Action</th>
+                      <th style="width: 80px;" class="text-center">Action</th>
                     </tr>
                   </thead>
-                  <tbody id="componentListAdd">
-                    <!-- Dynamic rows append here -->
+                  <tbody id="componentList">
+                    <tr id="emptyComponentRow">
+                      <td colspan="4" class="text-center text-muted py-3">No components linked yet. Select a component above to link it.</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
 
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
-        </div>
-      </form>
-    </div>
+          <!-- Form Actions Footer -->
+          <div class="card-footer bg-white border-top mb-4 text-right">
+            <a href="/product" class="btn btn-secondary mr-2">
+              <i class="fas fa-arrow-left mr-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save mr-1"></i> Save Product
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </section>
   </div>
+
+  <!-- Footer Partial -->
+  <%- include('partials/footer') %>
+
 </div>
+
+<!-- Core Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.1/js/jquery.overlayScrollbars.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+    
+    // HTML5 Bootstrap Form Validation
+    const forms = document.getElementsByClassName('needs-validation');
+    Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+
+    // Dynamic Component Adding
+    $('#addComponentBtn').on('click', function() {
+      const select = $('#addComponentSelect');
+      const selectedOption = select.find('option:selected');
+      const componentId = select.val();
+
+      if (!componentId) {
+        alert('Please select a component first.');
+        return;
+      }
+
+      // Check if already added
+      if ($(`#componentList tr[data-id="${componentId}"]`).length > 0) {
+        alert('This component has already been added.');
+        return;
+      }
+
+      const nameCHS = selectedOption.data('namechs');
+      const nameENG = selectedOption.data('nameeng');
+      const nameShort = selectedOption.data('nameshort');
+
+      // Hide empty placeholder row
+      $('#emptyComponentRow').hide();
+
+      // Append new row with hidden input array
+      const newRow = `
+        <tr data-id="${componentId}">
+          <td>
+            <input type="hidden" name="ComponentIds[]" value="${componentId}">
+            <strong>${nameCHS}</strong>
+          </td>
+          <td>${nameENG}</td>
+          <td><span class="badge badge-secondary">${nameShort}</span></td>
+          <td class="text-center">
+            <button type="button" class="btn btn-xs btn-danger remove-component-btn">
+              <i class="fas fa-times"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+
+      $('#componentList').append(newRow);
+
+      // Reset dropdown
+      select.val('');
+    });
+
+    // Remove Component Row
+    $(document).on('click', '.remove-component-btn', function() {
+      $(this).closest('tr').remove();
+      
+      // Show placeholder if table is empty
+      if ($('#componentList tr[data-id]').length === 0) {
+        $('#emptyComponentRow').show();
+      }
+    });
+
   });
 </script>
 
