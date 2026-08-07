@@ -147,6 +147,12 @@
           </div>
 
           <!-- Product Component Panel Card -->
+<!-- TEMPORARY DEBUG BOX -->
+<div class="alert alert-dark text-monospace">
+  <h5><i class="fas fa-bug"></i> EJS Debug Info</h5>
+  <p><strong>components count:</strong> <%= typeof components !== 'undefined' ? components.length : 'UNDEFINED' %></p>
+  <p><strong>selectedComponentIds:</strong> <%= typeof selectedComponentIds !== 'undefined' ? JSON.stringify(selectedComponentIds) : 'UNDEFINED' %></p>
+</div>
           <div class="card card-outline card-secondary">
             <div class="card-header">
               <h3 class="card-title"><i class="fas fa-puzzle-piece mr-1"></i> Product Components</h3>
@@ -188,30 +194,39 @@
                       <th style="width: 80px;" class="text-center">Action</th>
                     </tr>
                   </thead>
-                  <tbody id="componentList">
-                    <!-- Pre-populate existing linked components passed from Express controller -->
-                    <% if (typeof linkedComponents !== 'undefined' && linkedComponents.length > 0) { %>
-                      <% linkedComponents.forEach(function(comp) { %>
-                        <tr data-id="<%= comp.ComponentId %>">
-                          <td>
-                            <input type="hidden" name="ComponentIds[]" value="<%= comp.ComponentId %>">
-                            <strong><%= comp.NameCHS %></strong>
-                          </td>
-                          <td><%= comp.NameENG %></td>
-                          <td><span class="badge badge-secondary"><%= comp.NameShort %></span></td>
-                          <td class="text-center">
-                            <button type="button" class="btn btn-xs btn-danger remove-component-btn">
-                              <i class="fas fa-times"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    <% } else { %>
-                      <tr id="emptyComponentRow">
-                        <td colspan="4" class="text-center text-muted py-3">No components linked to this product yet.</td>
-                      </tr>
-                    <% } %>
-                  </tbody>
+<tbody id="componentList">
+  <% 
+    // Filter components whose ComponentId exists in selectedComponentIds
+    let linkedList = [];
+    if (typeof components !== 'undefined' && typeof selectedComponentIds !== 'undefined' && selectedComponentIds.length > 0) {
+      linkedList = components.filter(comp => 
+        selectedComponentIds.some(id => String(id) === String(comp.ComponentId))
+      );
+    }
+  %>
+
+  <% if (linkedList.length > 0) { %>
+    <% linkedList.forEach(function(comp) { %>
+      <tr data-id="<%= comp.ComponentId %>">
+        <td>
+          <input type="hidden" name="ComponentIds" value="<%= comp.ComponentId %>">
+          <strong><%= comp.NameCHS %></strong>
+        </td>
+        <td><%= comp.NameENG %></td>
+        <td><span class="badge badge-secondary"><%= comp.NameShort %></span></td>
+        <td class="text-center">
+          <button type="button" class="btn btn-xs btn-danger remove-component-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </td>
+      </tr>
+    <% }); %>
+  <% } else { %>
+    <tr id="emptyComponentRow">
+      <td colspan="4" class="text-center text-muted py-3">No components currently linked to this product.</td>
+    </tr>
+  <% } %>
+</tbody>
                 </table>
               </div>
             </div>
