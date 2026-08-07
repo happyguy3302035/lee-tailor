@@ -84,9 +84,9 @@
           <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list mr-1"></i> Product List</h3>
             <div class="card-tools">
-              <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addModal">
+              <a href="/product/add" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus mr-1"></i> Add Product
-              </button>
+              </a>
             </div>
           </div>
 
@@ -123,19 +123,9 @@
                         </td>
                         <td><%= item.Remark || '-' %></td>
                         <td class="text-center">
-                          <button 
-                            class="btn btn-sm btn-info edit-btn"
-                            data-id="<%= item.ProductId %>"
-                            data-namechs="<%= item.NameCHS %>"
-                            data-nameeng="<%= item.NameENG %>"
-                            data-nameshort="<%= item.NameShort %>"
-                            data-priority="<%= item.Priority !== null ? item.Priority : '' %>"
-                            data-reportpriority="<%= item.ReportPriority !== null ? item.ReportPriority : '' %>"
-                            data-remark="<%= item.Remark || '' %>"
-                            data-components='<%= JSON.stringify(item.Components || []) %>'
-                          >
+                          <a href="/product/edit/<%= item.ProductId %>" class="btn btn-sm btn-info">
                             <i class="fas fa-edit"></i> Edit
-                          </button>
+                          </a>
                           
                           <button 
                             class="btn btn-sm btn-danger delete-btn"
@@ -162,9 +152,7 @@
     </section>
   </div>
 
-  <!-- Modal Partials -->
-  <%- include('product-add', { components: components }) %>
-  <%- include('product-edit', { components: components }) %>
+  <!-- Delete Confirmation Modal Partial -->
   <%- include('product-delete') %>
 
   <!-- Footer Partial -->
@@ -180,92 +168,7 @@
 
 <script>
   $(document).ready(function() {
-    // Helper function to append a item to a ProductComponent table/list
-    function appendComponentRow(targetTableBody, componentId, nameCHS, nameENG, nameShort) {
-      // Avoid adding duplicates
-      if (targetTableBody.find(`tr[data-id="${componentId}"]`).length > 0) {
-        return;
-      }
-
-      const rowHtml = `
-        <tr data-id="${componentId}">
-          <td>
-            ${nameCHS}
-            <input type="hidden" name="componentIds[]" value="${componentId}">
-          </td>
-          <td>${nameENG}</td>
-          <td><span class="badge badge-secondary">${nameShort}</span></td>
-          <td class="text-center">
-            <button type="button" class="btn btn-xs btn-outline-danger remove-component-btn">
-              <i class="fas fa-times"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-      targetTableBody.append(rowHtml);
-    }
-
-    // Add Component button handler (ADD Modal)
-    $('#addComponentBtnAdd').on('click', function() {
-      const select = $('#addComponentSelectAdd option:selected');
-      const componentId = select.val();
-      if (!componentId) return;
-
-      const nameCHS = select.data('namechs');
-      const nameENG = select.data('nameeng');
-      const nameShort = select.data('nameshort');
-
-      appendComponentRow($('#componentListAdd'), componentId, nameCHS, nameENG, nameShort);
-    });
-
-    // Add Component button handler (EDIT Modal)
-    $('#addComponentBtnEdit').on('click', function() {
-      const select = $('#addComponentSelectEdit option:selected');
-      const componentId = select.val();
-      if (!componentId) return;
-
-      const nameCHS = select.data('namechs');
-      const nameENG = select.data('nameeng');
-      const nameShort = select.data('nameshort');
-
-      appendComponentRow($('#componentListEdit'), componentId, nameCHS, nameENG, nameShort);
-    });
-
-    // Remove Component from list item
-    $(document).on('click', '.remove-component-btn', function() {
-      $(this).closest('tr').remove();
-    });
-
-    // Populate Edit Modal
-    $('.edit-btn').on('click', function() {
-      const id = $(this).data('id');
-      const nameCHS = $(this).data('namechs');
-      const nameENG = $(this).data('nameeng');
-      const nameShort = $(this).data('nameshort');
-      const priority = $(this).data('priority');
-      const reportPriority = $(this).data('reportpriority');
-      const remark = $(this).data('remark');
-      const linkedComponents = $(this).data('components') || [];
-
-      $('#editId').val(id);
-      $('#editNameCHS').val(nameCHS);
-      $('#editNameENG').val(nameENG);
-      $('#editNameShort').val(nameShort);
-      $('#editPriority').val(priority);
-      $('#editReportPriority').val(reportPriority);
-      $('#editRemark').val(remark);
-
-      // Render existing ProductComponents
-      const listEdit = $('#componentListEdit');
-      listEdit.empty();
-      linkedComponents.forEach(comp => {
-        appendComponentRow(listEdit, comp.ComponentId, comp.NameCHS, comp.NameENG, comp.NameShort);
-      });
-
-      $('#editModal').modal('show');
-    });
-
-    // Populate Delete Modal
+    // Populate and show Delete Modal
     $('.delete-btn').on('click', function() {
       const id = $(this).data('id');
       const name = $(this).data('name');
@@ -274,22 +177,6 @@
       $('#deleteForm').attr('action', '/product/delete/' + id);
 
       $('#deleteModal').modal('show');
-    });
-
-    // Reset Add modal form on close
-    $('#addModal').on('hidden.bs.modal', function () {
-      $(this).find('form')[0].reset();
-      $('#componentListAdd').empty();
-      $(this).find('form').removeClass('was-validated');
-    });
-
-    // Client-side HTML5 validation trigger
-    $('.needs-validation').on('submit', function(e) {
-      if (!this.checkValidity()) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      $(this).addClass('was-validated');
     });
   });
 </script>
