@@ -16,6 +16,12 @@ router.get('/', (req, res) => {
 
   sql += ' ORDER BY ClientId DESC';
 
+  // -------------------------------------------------------------
+  // ADD THE DEBUGGING LOGS HERE:
+  console.log('Search Term:', searchQuery);
+  console.log('Executed SQL:', sql, params);
+  // -------------------------------------------------------------
+  
   db.all(sql, params, (err, rows) => {
     if (err) {
       console.error('Error fetching client info:', err.message);
