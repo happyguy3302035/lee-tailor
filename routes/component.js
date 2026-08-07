@@ -2,6 +2,36 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
+// --- Cache Configuration ---
+let componentsCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
+
+// Fetch cached Order Codes
+function getCachedComponents(callback) {
+  const now = Date.now();
+
+  if (componentsCache && (now - cacheTimestamp < CACHE_TTL_MS)) {
+    return callback(null, componentsCache);
+  }
+
+  db.all('SELECT * FROM Component', [], (err, rows) => {
+    if (!err) {
+      componentsCache = rows || [];
+      cacheTimestamp = now;
+    }
+    callback(err, componentsCache || []);
+  });
+}
+
+// Clear cache helper
+function clearOrderCodeCache() {
+  componentsCache = null;
+  cacheTimestamp = 0;
+}
+
+
+
 // 1. READ: Get all components
 router.get('/', (req, res) => {
   const sql = 'SELECT * FROM Component ORDER BY Priority ASC, ComponentId DESC';
