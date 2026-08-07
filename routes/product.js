@@ -95,7 +95,8 @@ router.post('/add', (req, res) => {
     ReportPriority ? parseInt(ReportPriority, 10) : null,
     Remark ? Remark.trim() : null
   ];
-
+  console.log('=== [DEBUG UPDATE PRODUCT] Raw req.body ===');
+  console.log(req.body);
   db.run(sql, params, function (err) {
     if (err) {
       console.error('Error creating product:', err.message);
@@ -104,7 +105,11 @@ router.post('/add', (req, res) => {
 
     const newProductId = this.lastID;
     let idsToInsert = Array.isArray(componentIds) ? componentIds : componentIds ? [componentIds] : [];
-
+    // ------------------------------------------------------------------
+    // LOG 2: Check raw component IDs before normalization
+    // ------------------------------------------------------------------
+    console.log('=== [DEBUG UPDATE PRODUCT] Raw Component IDs ===', componentIds);
+    console.log('Type of Raw Component IDs:', typeof componentIds);
     if (idsToInsert.length === 0) {
       return res.redirect('/product?message=created');
     }
@@ -113,6 +118,7 @@ router.post('/add', (req, res) => {
     let inserted = 0;
 
     idsToInsert.forEach((compId) => {
+      console.log(`[DEBUG] Inserting ProductComponent -> ProductId: ${newProductId}, ComponentId: ${compId}`);
       stmt.run([newProductId, compId], (err) => {
         if (err) console.error(`Error linking Component #${compId}:`, err.message);
         inserted++;
