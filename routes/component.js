@@ -25,7 +25,7 @@ function getCachedComponents(callback) {
 }
 
 // Clear cache helper
-function clearOrderCodeCache() {
+function clearComponentCache() {
   componentsCache = null;
   cacheTimestamp = 0;
 }
@@ -117,4 +117,9 @@ router.post('/delete/:id', (req, res) => {
   });
 });
 
+// Attach helpers directly to the router instance
+router.getCachedComponents = getCachedComponents;
+router.clearComponentCache = clearComponentCache;
+
+// Export router directly so server.js doesn't crash
 module.exports = router;
