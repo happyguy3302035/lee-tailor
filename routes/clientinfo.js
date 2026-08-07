@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
-// 1. READ: List Client Records with Search
+// ==========================================
+// 1. READ: List Client Records (Search & Pagination)
 // GET /clientinfo
+// ==========================================
 router.get('/', (req, res) => {
   const searchQuery = (req.query.search || '').trim();
   const page = parseInt(req.query.page, 10) || 1;
@@ -104,12 +106,11 @@ router.get('/', (req, res) => {
   });
 });
 
-
 // ==========================================
-// GET /clientinfo/add (Render Add Form)
+// 2. CREATE (Page): Render Add Client Form
+// GET /clientinfo/add
 // ==========================================
 router.get('/add', (req, res) => {
-  // Fetch available OrderCodes for the linkage dropdown
   db.all('SELECT * FROM OrderCode', [], (err, orderCodes) => {
     if (err) {
       console.error('Error fetching order codes:', err.message);
@@ -123,18 +124,72 @@ router.get('/add', (req, res) => {
 });
 
 // ==========================================
-// GET /clientinfo/edit/:id (Render Edit Form)
+// 3. CREATE (Action): Process Add Client Form
+// POST /clientinfo/add
+// ==========================================
+router.post('/add', (req, res) => {
+  const {
+    Name, NameShort, Address,
+    PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
+    SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
+    Remark
+  } = req.body;
+
+  if (!Name || !Name.trim() || !NameShort || !NameShort.trim()) {
+    return res.redirect('/clientinfo?err=' + encodeURIComponent('Client Name and Short Name are required.'));
+  }
+
+  const sql = `
+    INSERT INTO ClientInfo (
+      Name, NameShort, Address,
+      PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
+      SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
+      Remark
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const params = [
+    Name.trim(),
+    NameShort.trim(),
+    Address ? Address.trim() : null,
+    PrimaryContactName ? PrimaryContactName.trim() : null,
+    PrimaryContactTel ? PrimaryContactTel.trim() : null,
+    PrimaryContactFax ? PrimaryContactFax.trim() : null,
+    PrimaryContactEmail ? PrimaryContactEmail.trim() : null,
+    SecondaryContactName ? SecondaryContactName.trim() : null,
+    SecondaryContactTel ? SecondaryContactTel.trim() : null,
+    SecondaryContactFax ? SecondaryContactFax.trim() : null,
+    SecondaryContactEmail ? SecondaryContactEmail.trim() : null,
+    Remark ? Remark.trim() : null
+  ];
+
+  db.run(sql, params, function(err) {
+    if (err) {
+      console.error('Error creating client record:', err.message);
+      let errMsg = 'Failed to create client record.';
+      if (err.message.includes('UNIQUE constraint failed')) {
+        errMsg = 'A client with that Name or Short Name already exists.';
+      }
+      return res.redirect('/clientinfo?err=' + encodeURIComponent(errMsg));
+    }
+    res.redirect('/clientinfo?msg=created');
+  });
+});
+
+// ==========================================
+// 4. UPDATE (Page): Render Edit Client Form
+// GET /clientinfo/edit/:id
 // ==========================================
 router.get('/edit/:id', (req, res) => {
   const clientId = req.params.id;
 
-  // 1. Fetch Client Details
+  // Fetch client record
   db.get('SELECT * FROM ClientInfo WHERE ClientId = ?', [clientId], (err, client) => {
     if (err || !client) {
       return res.status(404).send('Client not found');
     }
 
-    // 2. Fetch Currently Linked Order Codes
+    // Fetch linked order codes
     const linkedSql = `
       SELECT coc.OrderCodeId, oc.CodeName 
       FROM ClientAndOrderCode coc
@@ -147,7 +202,7 @@ router.get('/edit/:id', (req, res) => {
         console.error('Error fetching linked order codes:', err.message);
       }
 
-      // 3. Fetch All Available Order Codes for the selection dropdown
+      // Fetch all available order codes
       db.all('SELECT * FROM OrderCode', [], (err, availableOrderCodes) => {
         if (err) {
           console.error('Error fetching available order codes:', err.message);
@@ -164,8 +219,72 @@ router.get('/edit/:id', (req, res) => {
   });
 });
 
+// ==========================================
+// 5. UPDATE (Action): Process Edit Client Form
+// POST /clientinfo/update
+// ==========================================
+router.post('/update', (req, res) => {
+  const {
+    ClientId, Name, NameShort, Address,
+    PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
+    SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
+    Remark
+  } = req.body;
 
-// 4. GET /clientinfo/delete/:id (Confirmation Screen)
+  if (!ClientId || !Name || !Name.trim() || !NameShort || !NameShort.trim()) {
+    return res.redirect('/clientinfo?err=' + encodeURIComponent('Client ID, Name, and Short Name are required.'));
+  }
+
+  const sql = `
+    UPDATE ClientInfo SET
+      Name = ?,
+      NameShort = ?,
+      Address = ?,
+      PrimaryContactName = ?,
+      PrimaryContactTel = ?,
+      PrimaryContactFax = ?,
+      PrimaryContactEmail = ?,
+      SecondaryContactName = ?,
+      SecondaryContactTel = ?,
+      SecondaryContactFax = ?,
+      SecondaryContactEmail = ?,
+      Remark = ?
+    WHERE ClientId = ?
+  `;
+
+  const params = [
+    Name.trim(),
+    NameShort.trim(),
+    Address ? Address.trim() : null,
+    PrimaryContactName ? PrimaryContactName.trim() : null,
+    PrimaryContactTel ? PrimaryContactTel.trim() : null,
+    PrimaryContactFax ? PrimaryContactFax.trim() : null,
+    PrimaryContactEmail ? PrimaryContactEmail.trim() : null,
+    SecondaryContactName ? SecondaryContactName.trim() : null,
+    SecondaryContactTel ? SecondaryContactTel.trim() : null,
+    SecondaryContactFax ? SecondaryContactFax.trim() : null,
+    SecondaryContactEmail ? SecondaryContactEmail.trim() : null,
+    Remark ? Remark.trim() : null,
+    ClientId
+  ];
+
+  db.run(sql, params, function(err) {
+    if (err) {
+      console.error('Error updating client record:', err.message);
+      let errMsg = 'Failed to update client record.';
+      if (err.message.includes('UNIQUE constraint failed')) {
+        errMsg = 'A client with that Name or Short Name already exists.';
+      }
+      return res.redirect('/clientinfo?err=' + encodeURIComponent(errMsg));
+    }
+    res.redirect('/clientinfo?msg=updated');
+  });
+});
+
+// ==========================================
+// 6. DELETE (Page): Render Delete Confirmation Screen
+// GET /clientinfo/delete/:id
+// ==========================================
 router.get('/delete/:id', (req, res) => {
   const clientId = req.params.id;
 
@@ -181,18 +300,21 @@ router.get('/delete/:id', (req, res) => {
   });
 });
 
-// 5. DELETE: Remove Client Record and dependent ClientAndOrderCode records
+// ==========================================
+// 7. DELETE (Action): Remove Client and Linkages
+// POST /clientinfo/delete/:id
+// ==========================================
 router.post('/delete/:id', (req, res) => {
   const clientId = req.params.id;
 
-  // Step 1: Remove foreign key dependencies from ClientAndOrderCode
+  // Step 1: Delete linked records in ClientAndOrderCode
   db.run('DELETE FROM ClientAndOrderCode WHERE ClientId = ?', [clientId], (err) => {
     if (err) {
       console.error('Error clearing linkages:', err.message);
       return res.redirect('/clientinfo?err=' + encodeURIComponent('Failed to delete associated linkages.'));
     }
 
-    // Step 2: Delete parent record from ClientInfo
+    // Step 2: Delete parent record in ClientInfo
     db.run('DELETE FROM ClientInfo WHERE ClientId = ?', [clientId], function (err) {
       if (err) {
         console.error('Error deleting client:', err.message);
