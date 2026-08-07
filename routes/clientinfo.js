@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
-console.log('[DEBUG] Loading routes/clientinfo.js file...');
+// In-memory cache store
+let orderCodesCache = null;
+let cacheTimestamp = 0;
+
+// Set cache period to 1 day (24 hours)
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 86,400,000 ms
 
 // ==========================================
 // 1. READ: List Client Records (Search & Pagination)
@@ -113,13 +118,11 @@ router.get('/', (req, res) => {
 // GET /clientinfo/add
 // ==========================================
 router.get('/add', (req, res) => {
-  console.log('[DEBUG] Hit GET /clientinfo/add route handler!');
-  db.all('SELECT * FROM OrderCode', [], (err, orderCodes) => {
+  getCachedOrderCodes((err, orderCodes) => {
     if (err) {
       console.error('Error fetching order codes:', err.message);
       orderCodes = [];
     }
-    console.log('[DEBUG] Rendering clientinfo-add view...');
     res.render('clientinfo-add', {
       availableOrderCodes: orderCodes || [],
       activePage: 'clientinfo'
@@ -360,4 +363,27 @@ router.post('/delete/:id', (req, res) => {
   });
 });
 
+// Helper to fetch OrderCodes from Cache or DB
+function getCachedOrderCodes(callback) {
+  const now = Date.now();
+
+  // Return cached data if valid and within 24 hours
+  if (orderCodesCache && (now - cacheTimestamp < CACHE_TTL_MS)) {
+    return callback(null, orderCodesCache);
+  }
+
+  db.all('SELECT * FROM OrderCode', [], (err, rows) => {
+    if (!err) {
+      orderCodesCache = rows || [];
+      cacheTimestamp = now;
+    }
+    callback(err, orderCodesCache || []);
+  });
+}
+
+// Function to manually clear cache whenever OrderCodes are updated
+function clearOrderCodeCache() {
+  orderCodesCache = null;
+  cacheTimestamp = 0;
+}
 module.exports = router;
