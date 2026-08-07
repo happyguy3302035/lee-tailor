@@ -213,21 +213,7 @@ router.post('/update', (req, res) => {
   });
 });
 
-// 4. DELETE: Remove Client Record
-router.post('/delete/:id', (req, res) => {
-  const { id } = req.params;
-  const sql = 'DELETE FROM ClientInfo WHERE ClientId = ?';
-
-  db.run(sql, [id], function(err) {
-    if (err) {
-      console.error('Error deleting client record:', err.message);
-      return res.redirect('/clientinfo?err=' + encodeURIComponent('Failed to delete client record.'));
-    }
-    res.redirect('/clientinfo?msg=deleted');
-  });
-});
-
-// GET /clientinfo/delete/:id (Confirmation Screen)
+// 4. GET /clientinfo/delete/:id (Confirmation Screen)
 router.get('/delete/:id', (req, res) => {
   const clientId = req.params.id;
 
@@ -243,22 +229,25 @@ router.get('/delete/:id', (req, res) => {
   });
 });
 
-// POST /clientinfo/delete/:id (Action)
+// 5. DELETE: Remove Client Record and dependent ClientAndOrderCode records
 router.post('/delete/:id', (req, res) => {
   const clientId = req.params.id;
 
+  // Step 1: Remove foreign key dependencies from ClientAndOrderCode
   db.run('DELETE FROM ClientAndOrderCode WHERE ClientId = ?', [clientId], (err) => {
     if (err) {
       console.error('Error clearing linkages:', err.message);
+      return res.redirect('/clientinfo?err=' + encodeURIComponent('Failed to delete associated linkages.'));
     }
 
+    // Step 2: Delete parent record from ClientInfo
     db.run('DELETE FROM ClientInfo WHERE ClientId = ?', [clientId], function (err) {
       if (err) {
         console.error('Error deleting client:', err.message);
-        return res.status(500).send('Database Error');
+        return res.redirect('/clientinfo?err=' + encodeURIComponent('Failed to delete client record.'));
       }
 
-      res.redirect('/clientinfo?msg=Client+deleted+successfully');
+      res.redirect('/clientinfo?msg=deleted');
     });
   });
 });
