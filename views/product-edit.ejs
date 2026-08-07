@@ -42,6 +42,57 @@
               <input type="text" class="form-control" id="editRemark" name="Remark">
             </div>
           </div>
+
+          <!-- ProductComponent Panel -->
+          <div class="card card-outline card-secondary mt-3">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-puzzle-piece mr-1"></i> Product Component Panel</h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-9 form-group mb-2">
+                  <select class="form-control" id="addComponentSelectEdit">
+                    <option value="" disabled selected>-- Select Component --</option>
+                    <% if (typeof components !== 'undefined' && components.length > 0) { %>
+                      <% components.forEach(function(comp) { %>
+                        <option 
+                          value="<%= comp.ComponentId %>"
+                          data-namechs="<%= comp.NameCHS %>"
+                          data-nameeng="<%= comp.NameENG %>"
+                          data-nameshort="<%= comp.NameShort %>"
+                        >
+                          <%= comp.NameCHS %>
+                        </option>
+                      <% }); %>
+                    <% } %>
+                  </select>
+                </div>
+                <div class="col-md-3 form-group mb-2">
+                  <button type="button" class="btn btn-outline-primary btn-block" id="addComponentBtnEdit">
+                    <i class="fas fa-plus"></i> Add
+                  </button>
+                </div>
+              </div>
+
+              <!-- Linked Components Listbox -->
+              <div class="table-responsive border rounded mt-2" style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-hover mb-0">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Component (CHS)</th>
+                      <th>Component (ENG)</th>
+                      <th>Short Name</th>
+                      <th style="width: 50px;" class="text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="componentListEdit">
+                    <!-- Dynamic rows populate here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
