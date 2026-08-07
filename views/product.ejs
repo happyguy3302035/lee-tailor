@@ -127,13 +127,10 @@
                             <i class="fas fa-edit"></i> Edit
                           </a>
                           
-                          <button 
-                            class="btn btn-sm btn-danger delete-btn"
-                            data-id="<%= item.ProductId %>"
-                            data-name="<%= item.NameCHS %> (<%= item.NameENG %>)"
-                          >
+                          <!-- Delete Button -->
+                          <a href="/product/delete/<%= item.ProductId %>" class="btn btn-xs btn-danger" title="Delete">
                             <i class="fas fa-trash"></i> Delete
-                          </button>
+                          </a>
                         </td>
                       </tr>
                     <% }); %>
@@ -151,9 +148,6 @@
       </div>
     </section>
   </div>
-
-  <!-- Delete Confirmation Modal Partial -->
-  <%- include('product-delete') %>
 
   <!-- Footer Partial -->
   <%- include('partials/footer') %>
