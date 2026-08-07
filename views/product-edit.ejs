@@ -57,7 +57,7 @@
           </div>
         <% } %>
 
-        <form action="/product/update/<%= product.ProductId %>" method="POST" class="needs-validation" novalidate>
+        <form action="/product/edit/<%= product.ProductId %>" method="POST" class="needs-validation" novalidate>
           <input type="hidden" name="ProductId" value="<%= product.ProductId %>">
           
           <!-- Product Information Card -->
