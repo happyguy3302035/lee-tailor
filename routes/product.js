@@ -163,7 +163,6 @@ router.post('/edit/:id', (req, res) => {
           stmt.run([productId, compId], (err) => {
             if (err) 
               console.error(`Error linking Component #${compId}:`, err.message);
-            }
             insertedCount++;
             if (insertedCount === idsToInsert.length) {
               stmt.finalize();
