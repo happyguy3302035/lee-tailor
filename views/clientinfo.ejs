@@ -79,10 +79,58 @@
           </div>
         <% } %>
 
+        <!-- SEARCH PANEL -->
+        <div class="card card-default">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-search mr-1"></i> Search Filter</h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <form action="/clientinfo" method="GET" id="searchForm">
+              <div class="row">
+                <div class="col-md-8 col-lg-6 form-group mb-md-0">
+                  <label for="searchInput">Client Name</label>
+                  <div class="input-group">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="searchInput" 
+                      name="search" 
+                      placeholder="Enter client name..." 
+                      value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+                    >
+                    <div class="input-group-append">
+                      <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search mr-1"></i> Search
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4 col-lg-6 d-flex align-items-end">
+                  <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
+                    <a href="/clientinfo" class="btn btn-secondary mr-2">
+                      <i class="fas fa-times mr-1"></i> Clear Filter
+                    </a>
+                  <% } %>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
         <!-- Table Card -->
         <div class="card card-outline card-primary">
           <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-list mr-1"></i> Client List</h3>
+            <h3 class="card-title">
+              <i class="fas fa-list mr-1"></i> Client List 
+              <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
+                <small class="text-muted ml-2">(Filtered by: "<strong><%= searchQuery %></strong>")</small>
+              <% } %>
+            </h3>
             <div class="card-tools">
               <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addModal">
                 <i class="fas fa-plus mr-1"></i> Add Client
@@ -154,7 +202,13 @@
                     <% }); %>
                   <% } else { %>
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">No Client Info records found. Click "Add Client" to create one.</td>
+                      <td colspan="7" class="text-center text-muted py-4">
+                        <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
+                          No clients found matching "<strong><%= searchQuery %></strong>". <a href="/clientinfo">Clear search</a>
+                        <% } else { %>
+                          No Client Info records found. Click "Add Client" to create one.
+                        <% } %>
+                      </td>
                     </tr>
                   <% } %>
                 </tbody>
@@ -216,7 +270,7 @@
             <div class="col-md-6 form-group">
               <label>Tel</label>
               <input type="tel" class="form-control" name="PrimaryContactTel" pattern="^[+]?[0-9\s\-\(\)]{7,20}$" placeholder="e.g. +44 20 7946 0912">
-              <div class="invalid-feedback">Please enter a valid phone number (7-20 digits, spaces, or +-() symbols).</div>
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Fax</label>
