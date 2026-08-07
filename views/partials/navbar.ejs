@@ -19,6 +19,23 @@
     <li class="nav-item d-none d-sm-inline-block">
       <a href="/product" class="nav-link">Products</a>
     </li>
+    <!-- System Dropdown Menu -->
+    <li class="nav-item dropdown d-none d-sm-inline-block <%= (typeof activeParent !== 'undefined' && activeParent === 'system') ? 'active' : '' %>">
+      <a id="systemDropdown" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link dropdown-toggle">
+        <i class="fas fa-cogs mr-1"></i> System
+      </a>
+      <ul aria-labelledby="systemDropdown" class="dropdown-menu border-0 shadow">
+        <li>
+          <a href="/factory" class="dropdown-item <%= (typeof activePage !== 'undefined' && activePage === 'factory') ? 'active' : '' %>">
+            <i class="fas fa-industry mr-2 text-muted"></i> Factory
+          </a>
+        </li>
+      </ul>
+    </li>
+
+
+
+
 
 
   </ul>
