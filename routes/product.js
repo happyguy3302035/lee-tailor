@@ -1,14 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const { getCachedComponents } = require('./component'); // Destructuring still works!
 
 // ==========================================
-// 1. READ: List Product Records
-// GET /product
+// 1. LIST: GET /product
 // ==========================================
 router.get('/', (req, res) => {
-  const sql = 'SELECT * FROM Product ORDER BY Priority ASC, ProductId DESC';
+  const sql = `
+    SELECT p.*, c.ComponentId, c.NameCHS AS CompNameCHS
+    FROM Product p
+    LEFT JOIN ProductComponent pc ON p.ProductId = pc.ProductId
+    LEFT JOIN Component c ON pc.ComponentId = c.ComponentId
+    ORDER BY p.Priority ASC, p.ProductId DESC
+  `;
 
   db.all(sql, [], (err, rows) => {
     if (err) {
@@ -16,105 +20,136 @@ router.get('/', (req, res) => {
       return res.status(500).send('Database error');
     }
 
+    // Group rows by ProductId
+    const productsMap = {};
+    (rows || []).forEach((row) => {
+      if (!productsMap[row.ProductId]) {
+        productsMap[row.ProductId] = {
+          ProductId: row.ProductId,
+          NameShort: row.NameShort,
+          NameCHS: row.NameCHS,
+          NameENG: row.NameENG,
+          Priority: row.Priority,
+          ReportPriority: row.ReportPriority,
+          Remark: row.Remark,
+          Components: []
+        };
+      }
+      if (row.ComponentId) {
+        productsMap[row.ProductId].Components.push({
+          ComponentId: row.ComponentId,
+          NameCHS: row.CompNameCHS
+        });
+      }
+    });
+
     res.render('product', {
-      products: rows || [],
-      message: req.query.msg || null,
-      error: req.query.err || null,
+      products: Object.values(productsMap),
+      message: req.query.message || null,
+      error: req.query.error || null,
       activePage: 'product'
     });
   });
 });
 
 // ==========================================
-// 2. CREATE: Add a new product
-// GET /product/add - Render Add Form
+// 2. ADD FORM: GET /product/add
 // ==========================================
 router.get('/add', (req, res) => {
-  getCachedComponents((err, orderCodes) => {
+  // Lazily fetch available components ONLY for the add page
+  db.all('SELECT * FROM Component ORDER BY NameCHS ASC', [], (err, components) => {
     if (err) {
-      console.error('Error fetching order codes:', err.message);
-      orderCodes = [];
+      console.error('Error fetching components:', err.message);
+      components = [];
     }
+
     res.render('product-add', {
-      availableComponents: availableComponents || [],
+      components: components || [],
+      error: req.query.error || null,
+      formData: {},
       activePage: 'product'
     });
   });
 });
 
 // ==========================================
-// POST /product/add - Save New Product & Linkages
+// 3. PROCESS ADD: POST /product/add
 // ==========================================
 router.post('/add', (req, res) => {
   const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, componentIds } = req.body;
-// Adapt fields to match your Product schema
 
-  const sqlProduct = 'INSERT INTO Product (NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark) VALUES (?, ?, ?, ?, ?, ?)';
-  const paramsProduct = [NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark];
+  if (!NameShort?.trim() || !NameCHS?.trim() || !NameENG?.trim()) {
+    return res.redirect('/product/add?error=' + encodeURIComponent('Short Name, Chinese Name, and English Name are required.'));
+  }
 
-  db.run(sqlProduct, paramsProduct, function(err) {
+  const sql = `
+    INSERT INTO Product (NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  const params = [
+    NameShort.trim(),
+    NameCHS.trim(),
+    NameENG.trim(),
+    Priority ? parseInt(Priority, 10) : null,
+    ReportPriority ? parseInt(ReportPriority, 10) : null,
+    Remark ? Remark.trim() : null
+  ];
+
+  db.run(sql, params, function (err) {
     if (err) {
       console.error('Error creating product:', err.message);
-      return res.redirect('/product?err=' + encodeURIComponent('Failed to create product.'));
+      return res.redirect('/product/add?error=' + encodeURIComponent('Database error while creating product.'));
     }
 
     const newProductId = this.lastID;
-
-    // Normalize componentIds array
-    let idsToInsert = [];
-    if (Array.isArray(componentIds)) idsToInsert = componentIds;
-    else if (componentIds) idsToInsert = [componentIds];
+    let idsToInsert = Array.isArray(componentIds) ? componentIds : componentIds ? [componentIds] : [];
 
     if (idsToInsert.length === 0) {
-      return res.redirect('/product?msg=created');
+      return res.redirect('/product?message=created');
     }
 
     const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId) VALUES (?, ?)');
-    let insertedCount = 0;
+    let inserted = 0;
 
     idsToInsert.forEach((compId) => {
       stmt.run([newProductId, compId], (err) => {
         if (err) console.error(`Error linking Component #${compId}:`, err.message);
-        insertedCount++;
-        if (insertedCount === idsToInsert.length) {
+        inserted++;
+        if (inserted === idsToInsert.length) {
           stmt.finalize();
-          res.redirect('/product?msg=created');
+          res.redirect('/product?message=created');
         }
       });
     });
   });
 });
 
-// 3. UPDATE: Edit existing product
 // ==========================================
-// GET /product/edit/:id - Render Edit Form
+// 4. EDIT FORM: GET /product/edit/:id
 // ==========================================
 router.get('/edit/:id', (req, res) => {
   const productId = req.params.id;
 
+  // Query 1: Fetch Product
   db.get('SELECT * FROM Product WHERE ProductId = ?', [productId], (err, product) => {
-    if (err || !product) return res.status(404).send('Product not found');
+    if (err || !product) {
+      return res.redirect('/product?error=' + encodeURIComponent('Product not found.'));
+    }
 
-    // Fetch existing linked components
-    const linkedSql = `
-      SELECT pc.ProductComponentId, pc.ComponentId, c.NameCHS, c.NameENG, c.NameShort
-      FROM ProductComponent pc
-      JOIN Component c ON pc.ComponentId = c.ComponentId
-      WHERE pc.ProductId = ?
-    `;
+    // Query 2: Fetch all components
+    db.all('SELECT * FROM Component ORDER BY NameCHS ASC', [], (err, components) => {
+      if (err) components = [];
 
-    db.all(linkedSql, [productId], (err, linkedComponents) => {
-      if (err) console.error('Error fetching linked components:', err.message);
+      // Query 3: Fetch linked component IDs for this product
+      db.all('SELECT ComponentId FROM ProductComponent WHERE ProductId = ?', [productId], (err, linkages) => {
+        const selectedComponentIds = (linkages || []).map((l) => l.ComponentId);
 
-      // Fetch all available components for dropdown selection
-      getCachedComponents((err, availableComponents) => {
-        if (err) {
-          console.error('Error fetching available order codes:', err.message);
-        }
         res.render('product-edit', {
           product,
-          linkedComponents: linkedComponents || [],
-          availableComponents: availableComponents || [],
+          components: components || [],
+          selectedComponentIds,
+          error: req.query.error || null,
           activePage: 'product'
         });
       });
@@ -123,50 +158,59 @@ router.get('/edit/:id', (req, res) => {
 });
 
 // ==========================================
-// POST /product/edit/:id - Update Product & Linkages
+// 5. PROCESS EDIT: POST /product/edit/:id
 // ==========================================
 router.post('/edit/:id', (req, res) => {
   const productId = req.params.id;
   const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, componentIds } = req.body;
 
-  let idsToInsert = [];
-  if (Array.isArray(componentIds)) idsToInsert = componentIds;
-  else if (componentIds) idsToInsert = [componentIds];
+  if (!NameShort?.trim() || !NameCHS?.trim() || !NameENG?.trim()) {
+    return res.redirect(`/product/edit/${productId}?error=` + encodeURIComponent('Short Name, Chinese Name, and English Name are required.'));
+  }
 
-  const updateProductSql = 'UPDATE Product SET NameShort = ?, NameCHS = ?, NameENG = ?, Priority = ?, ReportPriority = ?, Remark = ? WHERE ProductId = ?';
-  const paramsProduct = [NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, productId];
+  let idsToInsert = Array.isArray(componentIds) ? componentIds : componentIds ? [componentIds] : [];
+
+  const updateSql = `
+    UPDATE Product SET
+      NameShort = ?, NameCHS = ?, NameENG = ?, Priority = ?, ReportPriority = ?, Remark = ?
+    WHERE ProductId = ?
+  `;
+
+  const params = [
+    NameShort.trim(),
+    NameCHS.trim(),
+    NameENG.trim(),
+    Priority ? parseInt(Priority, 10) : null,
+    ReportPriority ? parseInt(ReportPriority, 10) : null,
+    Remark ? Remark.trim() : null,
+    productId
+  ];
 
   db.serialize(() => {
-    // 1. Update Product Details
-    db.run(updateProductSql, paramsProduct, function(err) {
+    db.run(updateSql, params, (err) => {
       if (err) {
-        console.error('Error updating product:', err.message);
-        return res.redirect('/product?err=' + encodeURIComponent('Failed to update product.'));
+        return res.redirect(`/product/edit/${productId}?error=` + encodeURIComponent('Failed to update product.'));
       }
 
-      // 2. Clear Old Linkages
       db.run('DELETE FROM ProductComponent WHERE ProductId = ?', [productId], (err) => {
         if (err) {
-          console.error('Error clearing old linkages:', err.message);
-          return res.redirect('/product?err=' + encodeURIComponent('Failed to update components.'));
+          return res.redirect(`/product/edit/${productId}?error=` + encodeURIComponent('Failed to update linkages.'));
         }
 
         if (idsToInsert.length === 0) {
-          return res.redirect('/product?msg=updated');
+          return res.redirect('/product?message=updated');
         }
 
-        // 3. Re-insert Selected Components
         const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId) VALUES (?, ?)');
-        let insertedCount = 0;
+        let inserted = 0;
 
         idsToInsert.forEach((compId) => {
           stmt.run([productId, compId], (err) => {
-            if (err) 
-              console.error(`Error linking Component #${compId}:`, err.message);
-            insertedCount++;
-            if (insertedCount === idsToInsert.length) {
+            if (err) console.error(`Error linking Component #${compId}:`, err.message);
+            inserted++;
+            if (inserted === idsToInsert.length) {
               stmt.finalize();
-              res.redirect('/product?msg=updated');
+              res.redirect('/product?message=updated');
             }
           });
         });
@@ -176,43 +220,43 @@ router.post('/edit/:id', (req, res) => {
 });
 
 // ==========================================
-// 6. DELETE (Page): Render Delete Confirmation Screen
-// GET /clientinfo/delete/:id
+// 6. DELETE CONFIRMATION: GET /product/delete/:id
 // ==========================================
 router.get('/delete/:id', (req, res) => {
   const productId = req.params.id;
 
   db.get('SELECT * FROM Product WHERE ProductId = ?', [productId], (err, product) => {
     if (err || !product) {
-      return res.status(404).send('Product not found');
+      return res.redirect('/product?error=' + encodeURIComponent('Product not found.'));
     }
 
     res.render('product-delete', {
-      client,
+      product,
       activePage: 'product'
     });
   });
 });
 
 // ==========================================
-// 4. DELETE: Remove a product
-// POST /product/delete/:id
+// 7. PROCESS DELETE: POST /product/delete/:id
 // ==========================================
 router.post('/delete/:id', (req, res) => {
   const productId = req.params.id;
-  // Step 1: Delete linked records in ProductComponent
-  db.run('DELETE FROM ProductComponent WHERE ProductId = ?', [productId], (err) => {
-    if (err) {
-      console.error('Error clearing linkages:', err.message);
-      return res.redirect('/product?err=' + encodeURIComponent('Failed to delete associated linkages.'));
-    }
-  });
-  db.run('DELETE FROM Product WHERE ProductId = ?', [productId], function (err) {
-    if (err) {
-      console.error('Error deleting Product:', err.message);
-      return res.redirect('/product?err=' + encodeURIComponent('Failed to delete product.'));
-    }
-    res.redirect('/product?msg=deleted');
+
+  db.serialize(() => {
+    db.run('DELETE FROM ProductComponent WHERE ProductId = ?', [productId], (err) => {
+      if (err) {
+        return res.redirect('/product?error=' + encodeURIComponent('Failed to delete component links.'));
+      }
+
+      db.run('DELETE FROM Product WHERE ProductId = ?', [productId], (err) => {
+        if (err) {
+          return res.redirect('/product?error=' + encodeURIComponent('Failed to delete product.'));
+        }
+
+        res.redirect('/product?message=deleted');
+      });
+    });
   });
 });
 
