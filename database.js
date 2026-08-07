@@ -134,6 +134,41 @@ db.serialize(() => {
       console.log('Transport table initialized successfully.');
     }
   });
+
+  // 6. ClientInfo Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ClientInfo (
+      ClientId INTEGER PRIMARY KEY AUTOINCREMENT,
+      Name TEXT UNIQUE NOT NULL,
+      NameShort TEXT UNIQUE NOT NULL,
+      Address TEXT,
+      PrimaryContactName TEXT,
+      PrimaryContactTel TEXT,
+      PrimaryContactFax TEXT,
+      PrimaryContactEmail TEXT,
+      SecondaryContactName TEXT,
+      SecondaryContactTel TEXT,
+      SecondaryContactFax TEXT,
+      SecondaryContactEmail TEXT,
+      Remark TEXT
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating ClientInfo table:', err.message);
+    } else {
+      console.log('ClientInfo table initialized successfully.');
+    }
+  });
+
+
+
+
+
+
+
+
+
+  
 });
 
 module.exports = db;
