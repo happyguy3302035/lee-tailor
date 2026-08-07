@@ -2,6 +2,36 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
+// --- Cache Configuration ---
+let orderCodesCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
+
+// Fetch cached Order Codes
+function getCachedOrderCodes(callback) {
+  const now = Date.now();
+
+  if (orderCodesCache && (now - cacheTimestamp < CACHE_TTL_MS)) {
+    return callback(null, orderCodesCache);
+  }
+
+  db.all('SELECT * FROM OrderCode', [], (err, rows) => {
+    if (!err) {
+      orderCodesCache = rows || [];
+      cacheTimestamp = now;
+    }
+    callback(err, orderCodesCache || []);
+  });
+}
+
+// Clear cache helper
+function clearOrderCodeCache() {
+  orderCodesCache = null;
+  cacheTimestamp = 0;
+}
+
+
+
 // 1. READ ALL: Fetch all OrderCodes ordered by Priority ascending
 router.get('/', (req, res) => {
   const sql = 'SELECT * FROM OrderCode ORDER BY Priority ASC, OrderCodeId ASC';
@@ -39,6 +69,7 @@ router.post('/add', (req, res) => {
       }
       return res.redirect('/order-code?err=Failed to add Order Code');
     }
+    clearOrderCodeCache();
     res.redirect('/order-code?msg=created');
   });
 });
@@ -62,6 +93,7 @@ router.post('/update', (req, res) => {
       }
       return res.redirect('/order-code?err=Failed to update Order Code');
     }
+    clearOrderCodeCache();
     res.redirect('/order-code?msg=updated');
   });
 });
@@ -76,8 +108,13 @@ router.post('/delete/:id', (req, res) => {
       console.error('Error deleting OrderCode:', err.message);
       return res.redirect('/order-code?err=Failed to delete Order Code');
     }
+    clearOrderCodeCache();
     res.redirect('/order-code?msg=deleted');
   });
 });
 
-module.exports = router;
+module.exports = {
+  router,
+  getCachedOrderCodes,
+  clearOrderCodeCache
+};
