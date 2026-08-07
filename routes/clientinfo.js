@@ -104,112 +104,21 @@ router.get('/', (req, res) => {
   });
 });
 
-// 2. CREATE: Add new Client Record
-router.post('/add', (req, res) => {
-  const {
-    Name, NameShort, Address,
-    PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
-    SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
-    Remark
-  } = req.body;
 
-  if (!Name || !Name.trim() || !NameShort || !NameShort.trim()) {
-    return res.redirect('/clientinfo?err=' + encodeURIComponent('Client Name and Short Name are required.'));
-  }
-
-  const sql = `
-    INSERT INTO ClientInfo (
-      Name, NameShort, Address,
-      PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
-      SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
-      Remark
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  const params = [
-    Name.trim(),
-    NameShort.trim(),
-    Address ? Address.trim() : null,
-    PrimaryContactName ? PrimaryContactName.trim() : null,
-    PrimaryContactTel ? PrimaryContactTel.trim() : null,
-    PrimaryContactFax ? PrimaryContactFax.trim() : null,
-    PrimaryContactEmail ? PrimaryContactEmail.trim() : null,
-    SecondaryContactName ? SecondaryContactName.trim() : null,
-    SecondaryContactTel ? SecondaryContactTel.trim() : null,
-    SecondaryContactFax ? SecondaryContactFax.trim() : null,
-    SecondaryContactEmail ? SecondaryContactEmail.trim() : null,
-    Remark ? Remark.trim() : null
-  ];
-
-  db.run(sql, params, function(err) {
+// ==========================================
+// GET /clientinfo/add (Render Add Form)
+// ==========================================
+router.get('/add', (req, res) => {
+  // Fetch available OrderCodes for the linkage dropdown
+  db.all('SELECT * FROM OrderCode', [], (err, orderCodes) => {
     if (err) {
-      console.error('Error creating client record:', err.message);
-      let errMsg = 'Failed to create client record.';
-      if (err.message.includes('UNIQUE constraint failed')) {
-        errMsg = 'A client with that Name or Short Name already exists.';
-      }
-      return res.redirect('/clientinfo?err=' + encodeURIComponent(errMsg));
+      console.error('Error fetching order codes:', err.message);
+      orderCodes = [];
     }
-    res.redirect('/clientinfo?msg=created');
-  });
-});
-
-// 3. UPDATE: Edit existing Client Record
-router.post('/update', (req, res) => {
-  const {
-    ClientId, Name, NameShort, Address,
-    PrimaryContactName, PrimaryContactTel, PrimaryContactFax, PrimaryContactEmail,
-    SecondaryContactName, SecondaryContactTel, SecondaryContactFax, SecondaryContactEmail,
-    Remark
-  } = req.body;
-
-  if (!ClientId || !Name || !Name.trim() || !NameShort || !NameShort.trim()) {
-    return res.redirect('/clientinfo?err=' + encodeURIComponent('Client ID, Name, and Short Name are required.'));
-  }
-
-  const sql = `
-    UPDATE ClientInfo SET
-      Name = ?,
-      NameShort = ?,
-      Address = ?,
-      PrimaryContactName = ?,
-      PrimaryContactTel = ?,
-      PrimaryContactFax = ?,
-      PrimaryContactEmail = ?,
-      SecondaryContactName = ?,
-      SecondaryContactTel = ?,
-      SecondaryContactFax = ?,
-      SecondaryContactEmail = ?,
-      Remark = ?
-    WHERE ClientId = ?
-  `;
-
-  const params = [
-    Name.trim(),
-    NameShort.trim(),
-    Address ? Address.trim() : null,
-    PrimaryContactName ? PrimaryContactName.trim() : null,
-    PrimaryContactTel ? PrimaryContactTel.trim() : null,
-    PrimaryContactFax ? PrimaryContactFax.trim() : null,
-    PrimaryContactEmail ? PrimaryContactEmail.trim() : null,
-    SecondaryContactName ? SecondaryContactName.trim() : null,
-    SecondaryContactTel ? SecondaryContactTel.trim() : null,
-    SecondaryContactFax ? SecondaryContactFax.trim() : null,
-    SecondaryContactEmail ? SecondaryContactEmail.trim() : null,
-    Remark ? Remark.trim() : null,
-    ClientId
-  ];
-
-  db.run(sql, params, function(err) {
-    if (err) {
-      console.error('Error updating client record:', err.message);
-      let errMsg = 'Failed to update client record.';
-      if (err.message.includes('UNIQUE constraint failed')) {
-        errMsg = 'A client with that Name or Short Name already exists.';
-      }
-      return res.redirect('/clientinfo?err=' + encodeURIComponent(errMsg));
-    }
-    res.redirect('/clientinfo?msg=updated');
+    res.render('clientinfo-add', {
+      availableOrderCodes: orderCodes || [],
+      activePage: 'clientinfo'
+    });
   });
 });
 
