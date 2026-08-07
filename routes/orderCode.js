@@ -113,8 +113,9 @@ router.post('/delete/:id', (req, res) => {
   });
 });
 
-module.exports = {
-  router,
-  getCachedOrderCodes,
-  clearOrderCodeCache
-};
+// Attach helpers directly to the router instance
+router.getCachedOrderCodes = getCachedOrderCodes;
+router.clearOrderCodeCache = clearOrderCodeCache;
+
+// Export router directly so server.js doesn't crash
+module.exports = router;
