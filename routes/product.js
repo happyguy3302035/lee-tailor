@@ -46,10 +46,11 @@ router.get('/add', (req, res) => {
 // POST /product/add - Save New Product & Linkages
 // ==========================================
 router.post('/add', (req, res) => {
-  const { Name, Code, Remark, componentIds } = req.body; // Adapt fields to match your Product schema
+  const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, componentIds } = req.body;
+// Adapt fields to match your Product schema
 
-  const sqlProduct = 'INSERT INTO Product (Name, Code, Remark) VALUES (?, ?, ?)';
-  const paramsProduct = [Name, Code, Remark];
+  const sqlProduct = 'INSERT INTO Product (NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark) VALUES (?, ?, ?, ?, ?, ?)';
+  const paramsProduct = [NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark];
 
   db.run(sqlProduct, paramsProduct, function(err) {
     if (err) {
@@ -126,14 +127,14 @@ router.get('/edit/:id', (req, res) => {
 // ==========================================
 router.post('/edit/:id', (req, res) => {
   const productId = req.params.id;
-  const { Name, Code, Remark, componentIds } = req.body;
+  const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, componentIds } = req.body;
 
   let idsToInsert = [];
   if (Array.isArray(componentIds)) idsToInsert = componentIds;
   else if (componentIds) idsToInsert = [componentIds];
 
-  const updateProductSql = 'UPDATE Product SET Name = ?, Code = ?, Remark = ? WHERE ProductId = ?';
-  const paramsProduct = [Name, Code, Remark, productId];
+  const updateProductSql = 'UPDATE Product SET NameShort = ?, NameCHS = ?, NameENG = ?, Priority = ?, ReportPriority = ?, Remark = ? WHERE ProductId = ?';
+  const paramsProduct = [NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, productId];
 
   db.serialize(() => {
     // 1. Update Product Details
@@ -155,7 +156,7 @@ router.post('/edit/:id', (req, res) => {
         }
 
         // 3. Re-insert Selected Components
-        const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId, InvoiceManagementId) VALUES (?, ?, 0)');
+        const stmt = db.prepare('INSERT INTO ProductComponent (ProductId, ComponentId) VALUES (?, ?)');
         let insertedCount = 0;
 
         idsToInsert.forEach((compId) => {
