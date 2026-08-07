@@ -140,8 +140,9 @@
                     <option value="">-- Choose an Order Code --</option>
                     <% if (typeof availableOrderCodes !== 'undefined' && availableOrderCodes.length > 0) { %>
                       <% availableOrderCodes.forEach(code => { %>
-                        <option value="<%= code.OrderCodeId %>" data-label="<%= code.CodeName || code.OrderCodeId %>">
-                          <%= code.CodeName || ('Order Code #' + code.OrderCodeId) %>
+                        <!-- Value stores OrderCodeId; data-label stores Name for display -->
+                        <option value="<%= code.OrderCodeId %>" data-label="<%= code.Name || code.CodeName || ('Order Code #' + code.OrderCodeId) %>">
+                          <%= code.Name || code.CodeName || ('Order Code #' + code.OrderCodeId) %>
                         </option>
                       <% }); %>
                     <% } %>
@@ -200,26 +201,30 @@
 
     if (btnAdd) {
       btnAdd.addEventListener('click', function () {
-        const selectedValue = selectElem.value;
+        const selectedValue = selectElem.value; // Holds OrderCode.OrderCodeId
         if (!selectedValue) return;
 
         const selectedOption = selectElem.options[selectElem.selectedIndex];
-        const selectedLabel = selectedOption.getAttribute('data-label');
+        const selectedLabel = selectedOption.getAttribute('data-label'); // Holds OrderCode.Name
 
+        // Check for duplicates
         if (tbody.querySelector(`tr[data-id="${selectedValue}"]`)) {
           alert('This Order Code is already linked.');
           return;
         }
 
+        // Hide "No order codes linked" row
         const emptyRow = document.getElementById('emptyRow');
         if (emptyRow) emptyRow.style.display = 'none';
 
+        // Add row to table
         const tr = document.createElement('tr');
         tr.setAttribute('data-id', selectedValue);
         tr.innerHTML = `
           <td>${selectedValue}</td>
           <td>${selectedLabel}</td>
           <td class="text-center">
+            <!-- Hidden input submits OrderCodeId to req.body.orderCodeIds -->
             <input type="hidden" name="orderCodeIds[]" value="${selectedValue}">
             <button type="button" class="btn btn-xs btn-danger remove-code-btn">
               <i class="fas fa-trash"></i>
