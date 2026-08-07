@@ -22,15 +22,24 @@
         Order Codes
       </a>
     </li>
-    <li class="nav-item d-none d-sm-inline-block">
-      <a href="/component" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'component') ? 'active' : '' %>">
-        Components
+    <!-- Products & Components Dropdown Menu -->
+    <li class="nav-item dropdown d-none d-sm-inline-block <%= (typeof activeParent !== 'undefined' && activeParent === 'product_component') ? 'active' : '' %>">
+      <a id="product_componentropdown" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link dropdown-toggle">
+        <i class="fas fa-cogs mr-1"></i> Products & Components
       </a>
-    </li>
-    <li class="nav-item d-none d-sm-inline-block">
-      <a href="/product" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'product') ? 'active' : '' %>">
-        Products
-      </a>
+      <ul aria-labelledby="product_componentDropdown" class="dropdown-menu border-0 shadow">
+        <li>
+          <a href="/factory" class="dropdown-item <%= (typeof activePage !== 'undefined' && activePage === 'product') ? 'active' : '' %>">
+            <i class="fas fa-industry mr-2 text-muted"></i> Products
+          </a>
+        </li>
+
+        <li>
+          <a href="/transport" class="dropdown-item <%= (typeof activePage !== 'undefined' && activePage === 'component') ? 'active' : '' %>">
+            <i class="fas fa-truck mr-2 text-muted"></i> Components
+          </a>
+        </li>
+      </ul>
     </li>
     <!-- System Dropdown Menu -->
     <li class="nav-item dropdown d-none d-sm-inline-block <%= (typeof activeParent !== 'undefined' && activeParent === 'system') ? 'active' : '' %>">
