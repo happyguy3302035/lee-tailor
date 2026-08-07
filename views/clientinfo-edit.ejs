@@ -64,7 +64,7 @@
               <div class="row">
                 <div class="col-md-12 form-group">
                   <label for="Address">Address</label>
-                  <input type="text" id="Address" name="Address" class="form-control" placeholder="Enter company/client address">
+                  <input type="text" id="Address" name="Address" class="form-control" value="<%= client.Address || '' %>" placeholder="Enter company/client address">
                 </div>
               </div>
 
@@ -73,22 +73,22 @@
               <div class="row">
                 <div class="col-md-6 form-group">
                   <label for="PrimaryContactName">Contact Name</label>
-                  <input type="text" id="PrimaryContactName" name="PrimaryContactName" class="form-control" placeholder="Enter primary contact name">
+                  <input type="text" id="PrimaryContactName" name="PrimaryContactName" class="form-control" value="<%= client.PrimaryContactName || '' %>" placeholder="Enter primary contact name">
                 </div>
                 <div class="col-md-6 form-group">
                   <label for="PrimaryContactEmail">Email Address</label>
-                  <input type="email" id="PrimaryContactEmail" name="PrimaryContactEmail" class="form-control" placeholder="primary@example.com">
+                  <input type="email" id="PrimaryContactEmail" name="PrimaryContactEmail" class="form-control" value="<%= client.PrimaryContactEmail || '' %>" placeholder="primary@example.com">
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-6 form-group">
                   <label for="PrimaryContactTel">Telephone</label>
-                  <input type="text" id="PrimaryContactTel" name="PrimaryContactTel" class="form-control" placeholder="Phone number">
+                  <input type="text" id="PrimaryContactTel" name="PrimaryContactTel" class="form-control" value="<%= client.PrimaryContactTel || '' %>" placeholder="Phone number">
                 </div>
                 <div class="col-md-6 form-group">
                   <label for="PrimaryContactFax">Fax</label>
-                  <input type="text" id="PrimaryContactFax" name="PrimaryContactFax" class="form-control" placeholder="Fax number">
+                  <input type="text" id="PrimaryContactFax" name="PrimaryContactFax" class="form-control" value="<%= client.PrimaryContactFax || '' %>" placeholder="Fax number">
                 </div>
               </div>
 
@@ -97,29 +97,29 @@
               <div class="row">
                 <div class="col-md-6 form-group">
                   <label for="SecondaryContactName">Contact Name</label>
-                  <input type="text" id="SecondaryContactName" name="SecondaryContactName" class="form-control" placeholder="Enter secondary contact name">
+                  <input type="text" id="SecondaryContactName" name="SecondaryContactName" class="form-control" value="<%= client.SecondaryContactName || '' %>" placeholder="Enter secondary contact name">
                 </div>
                 <div class="col-md-6 form-group">
                   <label for="SecondaryContactEmail">Email Address</label>
-                  <input type="email" id="SecondaryContactEmail" name="SecondaryContactEmail" class="form-control" placeholder="secondary@example.com">
+                  <input type="email" id="SecondaryContactEmail" name="SecondaryContactEmail" class="form-control" value="<%= client.SecondaryContactEmail || '' %>" placeholder="secondary@example.com">
                 </div>
               </div>
   
               <div class="row">
                 <div class="col-md-6 form-group">
                   <label for="SecondaryContactTel">Telephone</label>
-                  <input type="text" id="SecondaryContactTel" name="SecondaryContactTel" class="form-control" placeholder="Phone number">
+                  <input type="text" id="SecondaryContactTel" name="SecondaryContactTel" class="form-control" value="<%= client.SecondaryContactTel || '' %>" placeholder="Phone number">
                 </div>
                 <div class="col-md-6 form-group">
                   <label for="SecondaryContactFax">Fax</label>
-                  <input type="text" id="SecondaryContactFax" name="SecondaryContactFax" class="form-control" placeholder="Fax number">
+                  <input type="text" id="SecondaryContactFax" name="SecondaryContactFax" class="form-control" value="<%= client.SecondaryContactFax || '' %>" placeholder="Fax number">
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-12 form-group">
                   <label for="Remark">Remarks / Notes</label>
-                  <textarea id="Remark" name="Remark" class="form-control" rows="2" placeholder="Additional details or remarks..."></textarea>
+                  <textarea id="Remark" name="Remark" class="form-control" rows="2" placeholder="Additional details or remarks..."><%= client.Remark || '' %></textarea>
                 </div>
               </div>
             </div>
@@ -140,7 +140,6 @@
                     <option value="">-- Choose an Order Code --</option>
                     <% if (typeof availableOrderCodes !== 'undefined' && availableOrderCodes.length > 0) { %>
                       <% availableOrderCodes.forEach(code => { %>
-                        <!-- Value stores OrderCodeId; data-label stores Name for display -->
                         <option value="<%= code.OrderCodeId %>" data-label="<%= code.Name || ('Order Code #' + code.OrderCodeId) %>">
                           <%= code.Name || ('Order Code #' + code.OrderCodeId) %>
                         </option>
@@ -216,30 +215,26 @@
 
     if (btnAdd) {
       btnAdd.addEventListener('click', function () {
-        const selectedValue = selectElem.value; // Holds OrderCode.OrderCodeId
+        const selectedValue = selectElem.value;
         if (!selectedValue) return;
 
         const selectedOption = selectElem.options[selectElem.selectedIndex];
-        const selectedLabel = selectedOption.getAttribute('data-label'); // Holds OrderCode.Name
+        const selectedLabel = selectedOption.getAttribute('data-label');
 
-        // Check for duplicates
         if (tbody.querySelector(`tr[data-id="${selectedValue}"]`)) {
           alert('This Order Code is already linked.');
           return;
         }
 
-        // Hide "No order codes linked" row
         const emptyRow = document.getElementById('emptyRow');
         if (emptyRow) emptyRow.style.display = 'none';
 
-        // Add row to table
         const tr = document.createElement('tr');
         tr.setAttribute('data-id', selectedValue);
         tr.innerHTML = `
           <td>${selectedValue}</td>
           <td>${selectedLabel}</td>
           <td class="text-center">
-            <!-- Hidden input submits OrderCodeId to req.body.orderCodeIds -->
             <input type="hidden" name="orderCodeIds[]" value="${selectedValue}">
             <button type="button" class="btn btn-xs btn-danger remove-code-btn">
               <i class="fas fa-trash"></i>
@@ -266,7 +261,6 @@
       });
     }
   });
-});
 </script>
 
 </body>
