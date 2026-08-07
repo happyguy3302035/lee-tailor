@@ -76,7 +76,7 @@ router.get('/add', (req, res) => {
 // 3. PROCESS ADD: POST /product/add
 // ==========================================
 router.post('/add', (req, res) => {
-  const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, componentIds } = req.body;
+  const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, ComponentIds } = req.body;
 
   if (!NameShort?.trim() || !NameCHS?.trim() || !NameENG?.trim()) {
     return res.redirect('/product/add?error=' + encodeURIComponent('Short Name, Chinese Name, and English Name are required.'));
@@ -104,12 +104,12 @@ router.post('/add', (req, res) => {
     }
 
     const newProductId = this.lastID;
-    let idsToInsert = Array.isArray(componentIds) ? componentIds : componentIds ? [componentIds] : [];
+    let idsToInsert = Array.isArray(ComponentIds) ? ComponentIds : ComponentIds ? [ComponentIds] : [];
     // ------------------------------------------------------------------
     // LOG 2: Check raw component IDs before normalization
     // ------------------------------------------------------------------
-    console.log('=== [DEBUG UPDATE PRODUCT] Raw Component IDs ===', componentIds);
-    console.log('Type of Raw Component IDs:', typeof componentIds);
+    console.log('=== [DEBUG UPDATE PRODUCT] Raw Component IDs ===', ComponentIds);
+    console.log('Type of Raw Component IDs:', typeof ComponentIds);
     if (idsToInsert.length === 0) {
       return res.redirect('/product?message=created');
     }
