@@ -210,15 +210,18 @@
             </div>
             <div class="col-md-6 form-group">
               <label>Email</label>
-              <input type="email" class="form-control" name="PrimaryContactEmail">
+              <input type="email" class="form-control" name="PrimaryContactEmail" placeholder="e.g. contact@domain.com">
+              <div class="invalid-feedback">Please provide a valid email address.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Tel</label>
-              <input type="text" class="form-control" name="PrimaryContactTel">
+              <input type="tel" class="form-control" name="PrimaryContactTel" pattern="^[+]?[0-9\s\-\(\)]{7,20}$" placeholder="e.g. +44 20 7946 0912">
+              <div class="invalid-feedback">Please enter a valid phone number (7-20 digits, spaces, or +-() symbols).</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Fax</label>
-              <input type="text" class="form-control" name="PrimaryContactFax">
+              <input type="tel" class="form-control" name="PrimaryContactFax" pattern="^[+]?[0-9\s\-\(\)]{7,20}$" placeholder="e.g. +44 20 7946 0913">
+              <div class="invalid-feedback">Please enter a valid fax number.</div>
             </div>
           </div>
 
@@ -231,15 +234,18 @@
             </div>
             <div class="col-md-6 form-group">
               <label>Email</label>
-              <input type="email" class="form-control" name="SecondaryContactEmail">
+              <input type="email" class="form-control" name="SecondaryContactEmail" placeholder="e.g. contact2@domain.com">
+              <div class="invalid-feedback">Please provide a valid email address.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Tel</label>
-              <input type="text" class="form-control" name="SecondaryContactTel">
+              <input type="tel" class="form-control" name="SecondaryContactTel" pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Fax</label>
-              <input type="text" class="form-control" name="SecondaryContactFax">
+              <input type="tel" class="form-control" name="SecondaryContactFax" pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
+              <div class="invalid-feedback">Please enter a valid fax number.</div>
             </div>
           </div>
 
@@ -298,14 +304,17 @@
             <div class="col-md-6 form-group">
               <label>Email</label>
               <input type="email" class="form-control" id="editPEmail" name="PrimaryContactEmail">
+              <div class="invalid-feedback">Please provide a valid email address.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Tel</label>
-              <input type="text" class="form-control" id="editPTel" name="PrimaryContactTel">
+              <input type="tel" class="form-control" id="editPTel" name="PrimaryContactTel" pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Fax</label>
-              <input type="text" class="form-control" id="editPFax" name="PrimaryContactFax">
+              <input type="tel" class="form-control" id="editPFax" name="PrimaryContactFax" pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
+              <div class="invalid-feedback">Please enter a valid fax number.</div>
             </div>
           </div>
 
@@ -319,14 +328,17 @@
             <div class="col-md-6 form-group">
               <label>Email</label>
               <input type="email" class="form-control" id="editSEmail" name="SecondaryContactEmail">
+              <div class="invalid-feedback">Please provide a valid email address.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Tel</label>
-              <input type="text" class="form-control" id="editSTel" name="SecondaryContactTel">
+              <input type="tel" class="form-control" id="editSTel" name="SecondaryContactTel" pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
             </div>
             <div class="col-md-6 form-group">
               <label>Fax</label>
-              <input type="text" class="form-control" id="editSFax" name="SecondaryContactFax">
+              <input type="tel" class="form-control" id="editSFax" name="SecondaryContactFax" pattern="^[+]?[0-9\s\-\(\)]{7,20}$">
+              <div class="invalid-feedback">Please enter a valid fax number.</div>
             </div>
           </div>
 
@@ -409,7 +421,7 @@
       $('#deleteModal').modal('show');
     });
 
-    // Validation logic
+    // Client-side HTML5 / Bootstrap form validation
     $('.needs-validation').on('submit', function(e) {
       if (!this.checkValidity()) {
         e.preventDefault();
