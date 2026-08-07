@@ -1,0 +1,53 @@
+<!-- Modal: Edit Product -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <form action="/product/update" method="POST" class="needs-validation" novalidate>
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title" id="editModalLabel"><i class="fas fa-edit mr-1"></i> Edit Product</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editId" name="ProductId">
+          <div class="row">
+            <div class="col-md-4 form-group">
+              <label for="editNameShort">Short Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editNameShort" name="NameShort" required>
+              <div class="invalid-feedback">Short Name is required.</div>
+            </div>
+            <div class="col-md-4 form-group">
+              <label for="editNameCHS">Chinese Name (CHS) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editNameCHS" name="NameCHS" required>
+              <div class="invalid-feedback">Chinese Name is required.</div>
+            </div>
+            <div class="col-md-4 form-group">
+              <label for="editNameENG">English Name (ENG) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editNameENG" name="NameENG" required>
+              <div class="invalid-feedback">English Name is required.</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 form-group">
+              <label for="editPriority">Priority (Integer)</label>
+              <input type="number" class="form-control" id="editPriority" name="Priority" step="1">
+            </div>
+            <div class="col-md-3 form-group">
+              <label for="editReportPriority">Report Priority</label>
+              <input type="number" class="form-control" id="editReportPriority" name="ReportPriority" step="1">
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="editRemark">Remark</label>
+              <input type="text" class="form-control" id="editRemark" name="Remark">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info"><i class="fas fa-save mr-1"></i> Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
