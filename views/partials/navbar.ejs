@@ -8,16 +8,29 @@
       </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-      <a href="/company" class="nav-link">Company</a>
+      <a href="/company" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'company') ? 'active' : '' %>">
+        Company
+      </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-      <a href="/order-code" class="nav-link">Order Codes</a>
+      <a href="/clientinfo" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'clientinfo') ? 'active' : '' %>">
+        Client Info
+      </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-      <a href="/component" class="nav-link">Components</a>
+      <a href="/order-code" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'order-code') ? 'active' : '' %>">
+        Order Codes
+      </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-      <a href="/product" class="nav-link">Products</a>
+      <a href="/component" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'component') ? 'active' : '' %>">
+        Components
+      </a>
+    </li>
+    <li class="nav-item d-none d-sm-inline-block">
+      <a href="/product" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'product') ? 'active' : '' %>">
+        Products
+      </a>
     </li>
     <!-- System Dropdown Menu -->
     <li class="nav-item dropdown d-none d-sm-inline-block <%= (typeof activeParent !== 'undefined' && activeParent === 'system') ? 'active' : '' %>">
