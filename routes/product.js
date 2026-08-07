@@ -137,20 +137,48 @@ router.post('/add', (req, res) => {
 router.get('/edit/:id', (req, res) => {
   const productId = req.params.id;
 
+  console.log(`\n=== [DEBUG EDIT GET] Opening Edit Page for Product ID: ${productId} ===`);
+
   // Query 1: Fetch Product
   db.get('SELECT * FROM Product WHERE ProductId = ?', [productId], (err, product) => {
-    if (err || !product) {
+    if (err) {
+      console.error('[DEBUG EDIT GET] Error fetching product:', err);
+      return res.redirect('/product?error=' + encodeURIComponent('Database error.'));
+    }
+    if (!product) {
+      console.warn(`[DEBUG EDIT GET] Product with ID ${productId} not found in DB.`);
       return res.redirect('/product?error=' + encodeURIComponent('Product not found.'));
     }
 
+    console.log('[DEBUG EDIT GET] Product Found:', product.NameCHS || product.NameShort);
+
     // Query 2: Fetch all components
     db.all('SELECT * FROM Component ORDER BY NameCHS ASC', [], (err, components) => {
-      if (err) components = [];
+      if (err) {
+        console.error('[DEBUG EDIT GET] Error fetching components:', err);
+        components = [];
+      }
+
+      console.log(`[DEBUG EDIT GET] Total Components Available in DB: ${components ? components.length : 0}`);
+      if (components && components.length > 0) {
+        console.log('[DEBUG EDIT GET] Sample Component structure:', components[0]);
+      }
 
       // Query 3: Fetch linked component IDs for this product
       db.all('SELECT ComponentId FROM ProductComponent WHERE ProductId = ?', [productId], (err, linkages) => {
+        if (err) {
+          console.error('[DEBUG EDIT GET] Error fetching product components:', err);
+        }
+
+        console.log('[DEBUG EDIT GET] Raw ProductComponent Linkages from DB:', linkages);
+
+        // Map linkages to array of IDs
         const selectedComponentIds = (linkages || []).map((l) => l.ComponentId);
 
+        console.log('[DEBUG EDIT GET] Mapped selectedComponentIds:', selectedComponentIds);
+        console.log('[DEBUG EDIT GET] Data types of selectedComponentIds:', selectedComponentIds.map(id => typeof id));
+
+        // Render page
         res.render('product-edit', {
           product,
           components: components || [],
@@ -168,13 +196,13 @@ router.get('/edit/:id', (req, res) => {
 // ==========================================
 router.post('/edit/:id', (req, res) => {
   const productId = req.params.id;
-  const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, componentIds } = req.body;
+  const { NameShort, NameCHS, NameENG, Priority, ReportPriority, Remark, ComponentIds } = req.body;
 
   if (!NameShort?.trim() || !NameCHS?.trim() || !NameENG?.trim()) {
     return res.redirect(`/product/edit/${productId}?error=` + encodeURIComponent('Short Name, Chinese Name, and English Name are required.'));
   }
 
-  let idsToInsert = Array.isArray(componentIds) ? componentIds : componentIds ? [componentIds] : [];
+  let idsToInsert = Array.isArray(ComponentIds) ? ComponentIds : ComponentIds ? [ComponentIds] : [];
 
   const updateSql = `
     UPDATE Product SET
