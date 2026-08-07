@@ -141,8 +141,8 @@
                     <% if (typeof availableOrderCodes !== 'undefined' && availableOrderCodes.length > 0) { %>
                       <% availableOrderCodes.forEach(code => { %>
                         <!-- Value stores OrderCodeId; data-label stores Name for display -->
-                        <option value="<%= code.OrderCodeId %>" data-label="<%= code.Name || code.CodeName || ('Order Code #' + code.OrderCodeId) %>">
-                          <%= code.Name || code.CodeName || ('Order Code #' + code.OrderCodeId) %>
+                        <option value="<%= code.OrderCodeId %>" data-label="<%= code.Name || ('Order Code #' + code.OrderCodeId) %>">
+                          <%= code.Name || ('Order Code #' + code.OrderCodeId) %>
                         </option>
                       <% }); %>
                     <% } %>
@@ -169,7 +169,7 @@
                       <% linkedOrderCodes.forEach(item => { %>
                         <tr data-id="<%= item.OrderCodeId %>">
                           <td><%= item.OrderCodeId %></td>
-                          <td><%= item.Name || item.CodeName || ('Order Code #' + item.OrderCodeId) %></td>
+                          <td><%= item.Name || ('Order Code #' + item.OrderCodeId) %></td>
                           <td class="text-center">
                             <input type="hidden" name="orderCodeIds[]" value="<%= item.OrderCodeId %>">
                             <button type="button" class="btn btn-xs btn-danger remove-code-btn">
