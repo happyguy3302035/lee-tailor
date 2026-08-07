@@ -120,7 +120,20 @@ db.serialize(() => {
     }
   });
 
-  
+  // 5. Transport Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Transport (
+      TransportId INTEGER PRIMARY KEY AUTOINCREMENT,
+      Name TEXT UNIQUE NOT NULL,
+      Priority INTEGER
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating Transport table:', err.message);
+    } else {
+      console.log('Transport table initialized successfully.');
+    }
+  });
 });
 
 module.exports = db;
