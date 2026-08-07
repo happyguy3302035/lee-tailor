@@ -23,6 +23,12 @@ app.set('views', path.join(__dirname, 'views'));
 // ==========================================
 // 3. Import & Mount Modular Routes
 // ==========================================
+// Add this near the top of app.js (after express is initialized)
+app.use((req, res, next) => {
+  console.log(`[DEBUG] Incoming Request: ${req.method} ${req.url}`);
+  next();
+});
+
 const companyApiRoutes = require('./routes/company');
 app.use('/company', companyApiRoutes);
 const orderCodeRouter = require('./routes/orderCode');
