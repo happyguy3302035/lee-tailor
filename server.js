@@ -31,7 +31,8 @@ const componentRouter = require('./routes/component');
 app.use('/component', componentRouter);
 const productRouter = require('./routes/product');
 app.use('/product', productRouter);
-
+const factoryRouter = require('./routes/factory');
+app.use('/factory', factoryRouter);
 
 
 
