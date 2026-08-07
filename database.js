@@ -68,7 +68,7 @@ db.serialize(() => {
     }
   });
 
-  // 2. Component Table
+  // 3. Component Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Component (
       ComponentId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,7 +86,24 @@ db.serialize(() => {
     }
   });
 
-
+  // 4. Product Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Product (
+      ProductId INTEGER PRIMARY KEY AUTOINCREMENT,
+      NameCHS TEXT UNIQUE NOT NULL,
+      NameENG TEXT UNIQUE NOT NULL,
+      NameShort TEXT UNIQUE NOT NULL,
+      Remark TEXT,
+      ReportPriority INTEGER,
+      Priority INTEGER
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating Product table:', err.message);
+    } else {
+      console.log('Component table initialized successfully.');
+    }
+  });
   
 });
 
