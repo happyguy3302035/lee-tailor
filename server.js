@@ -35,7 +35,8 @@ const factoryRouter = require('./routes/factory');
 app.use('/factory', factoryRouter);
 const transportRouter = require('./routes/transport');
 app.use('/transport', transportRouter);
-
+const clientInfoRouter = require('./routes/clientinfo');
+app.use('/clientinfo', clientInfoRouter);
 
 // ==========================================
 // 4. Page Rendering Routes
