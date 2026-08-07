@@ -60,26 +60,66 @@
                   <input type="text" id="NameShort" name="NameShort" class="form-control" value="<%= client.NameShort || '' %>">
                 </div>
               </div>
-  
+
+              <div class="row">
+                <div class="col-md-12 form-group">
+                  <label for="Address">Address</label>
+                  <input type="text" id="Address" name="Address" class="form-control" placeholder="Enter company/client address">
+                </div>
+              </div>
+
+              <hr>
+              <h5 class="text-muted mb-3"><i class="fas fa-user-tag mr-1"></i> Primary Contact</h5>
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label for="PrimaryContactName">Primary Contact Name</label>
-                  <input type="text" id="PrimaryContactName" name="PrimaryContactName" class="form-control" value="<%= client.PrimaryContactName || '' %>">
+                  <label for="PrimaryContactName">Contact Name</label>
+                  <input type="text" id="PrimaryContactName" name="PrimaryContactName" class="form-control" placeholder="Enter primary contact name">
                 </div>
                 <div class="col-md-6 form-group">
-                  <label for="Email">Email Address</label>
-                  <input type="email" id="Email" name="Email" class="form-control" value="<%= client.Email || '' %>">
+                  <label for="PrimaryContactEmail">Email Address</label>
+                  <input type="email" id="PrimaryContactEmail" name="PrimaryContactEmail" class="form-control" placeholder="primary@example.com">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <label for="PrimaryContactTel">Telephone</label>
+                  <input type="text" id="PrimaryContactTel" name="PrimaryContactTel" class="form-control" placeholder="Phone number">
+                </div>
+                <div class="col-md-6 form-group">
+                  <label for="PrimaryContactFax">Fax</label>
+                  <input type="text" id="PrimaryContactFax" name="PrimaryContactFax" class="form-control" placeholder="Fax number">
+                </div>
+              </div>
+
+              <hr>
+              <h5 class="text-muted mb-3"><i class="fas fa-user-friends mr-1"></i> Secondary Contact (Optional)</h5>
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <label for="SecondaryContactName">Contact Name</label>
+                  <input type="text" id="SecondaryContactName" name="SecondaryContactName" class="form-control" placeholder="Enter secondary contact name">
+                </div>
+                <div class="col-md-6 form-group">
+                  <label for="SecondaryContactEmail">Email Address</label>
+                  <input type="email" id="SecondaryContactEmail" name="SecondaryContactEmail" class="form-control" placeholder="secondary@example.com">
                 </div>
               </div>
   
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label for="Phone">Phone Number</label>
-                  <input type="text" id="Phone" name="Phone" class="form-control" value="<%= client.Phone || '' %>">
+                  <label for="SecondaryContactTel">Telephone</label>
+                  <input type="text" id="SecondaryContactTel" name="SecondaryContactTel" class="form-control" placeholder="Phone number">
                 </div>
                 <div class="col-md-6 form-group">
-                  <label for="Address">Address</label>
-                  <input type="text" id="Address" name="Address" class="form-control" value="<%= client.Address || '' %>">
+                  <label for="SecondaryContactFax">Fax</label>
+                  <input type="text" id="SecondaryContactFax" name="SecondaryContactFax" class="form-control" placeholder="Fax number">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12 form-group">
+                  <label for="Remark">Remarks / Notes</label>
+                  <textarea id="Remark" name="Remark" class="form-control" rows="2" placeholder="Additional details or remarks..."></textarea>
                 </div>
               </div>
             </div>
@@ -100,8 +140,9 @@
                     <option value="">-- Choose an Order Code --</option>
                     <% if (typeof availableOrderCodes !== 'undefined' && availableOrderCodes.length > 0) { %>
                       <% availableOrderCodes.forEach(code => { %>
-                        <option value="<%= code.OrderCodeId %>" data-label="<%= code.CodeName || code.OrderCodeId %>">
-                          <%= code.CodeName || ('Order Code #' + code.OrderCodeId) %>
+                        <!-- Value stores OrderCodeId; data-label stores Name for display -->
+                        <option value="<%= code.OrderCodeId %>" data-label="<%= code.Name || code.CodeName || ('Order Code #' + code.OrderCodeId) %>">
+                          <%= code.Name || code.CodeName || ('Order Code #' + code.OrderCodeId) %>
                         </option>
                       <% }); %>
                     <% } %>
@@ -128,7 +169,7 @@
                       <% linkedOrderCodes.forEach(item => { %>
                         <tr data-id="<%= item.OrderCodeId %>">
                           <td><%= item.OrderCodeId %></td>
-                          <td><%= item.CodeName || ('Order Code #' + item.OrderCodeId) %></td>
+                          <td><%= item.Name || item.CodeName || ('Order Code #' + item.OrderCodeId) %></td>
                           <td class="text-center">
                             <input type="hidden" name="orderCodeIds[]" value="<%= item.OrderCodeId %>">
                             <button type="button" class="btn btn-xs btn-danger remove-code-btn">
@@ -160,45 +201,58 @@
       </div>
     </section>
   </div>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const selectElem = document.getElementById('orderCodeSelect');
-      const btnAdd = document.getElementById('btnAddOrderCode');
-      const tbody = document.getElementById('linkedOrderCodesList');
-  
+
+  <!-- Footer Partial -->
+  <%- include('partials/footer') %>
+
+</div>
+
+<!-- Page-specific dynamic linkage script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const selectElem = document.getElementById('orderCodeSelect');
+    const btnAdd = document.getElementById('btnAddOrderCode');
+    const tbody = document.getElementById('linkedOrderCodesList');
+
+    if (btnAdd) {
       btnAdd.addEventListener('click', function () {
-        const selectedValue = selectElem.value;
+        const selectedValue = selectElem.value; // Holds OrderCode.OrderCodeId
         if (!selectedValue) return;
-  
+
         const selectedOption = selectElem.options[selectElem.selectedIndex];
-        const selectedLabel = selectedOption.getAttribute('data-label');
-  
+        const selectedLabel = selectedOption.getAttribute('data-label'); // Holds OrderCode.Name
+
+        // Check for duplicates
         if (tbody.querySelector(`tr[data-id="${selectedValue}"]`)) {
           alert('This Order Code is already linked.');
           return;
         }
-  
+
+        // Hide "No order codes linked" row
         const emptyRow = document.getElementById('emptyRow');
         if (emptyRow) emptyRow.style.display = 'none';
-  
+
+        // Add row to table
         const tr = document.createElement('tr');
         tr.setAttribute('data-id', selectedValue);
         tr.innerHTML = `
           <td>${selectedValue}</td>
           <td>${selectedLabel}</td>
           <td class="text-center">
+            <!-- Hidden input submits OrderCodeId to req.body.orderCodeIds -->
             <input type="hidden" name="orderCodeIds[]" value="${selectedValue}">
             <button type="button" class="btn btn-xs btn-danger remove-code-btn">
               <i class="fas fa-trash"></i>
             </button>
           </td>
         `;
-  
+
         tbody.appendChild(tr);
         selectElem.value = '';
       });
-  
+    }
+
+    if (tbody) {
       tbody.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-code-btn');
         if (btn) {
@@ -210,20 +264,10 @@
           }
         }
       });
-    });
-  </script>
-
-  <!-- Footer Partial -->
-  <%- include('partials/footer') %>
-
-</div>
-
-<!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.1/js/jquery.overlayScrollbars.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-
+    }
+  });
+});
+</script>
 
 </body>
 </html>
